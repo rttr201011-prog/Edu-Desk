@@ -1,0 +1,3496 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>EduBoard Pro 3.4 — Интерактивная доска преподавателя</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-ui: #ffffff;
+    --bg-subtle: #f8fafc;
+    --bg-hover: #f1f5f9;
+    --border: #e2e8f0;
+    --border-strong: #cbd5e1;
+    --text: #0f172a;
+    --text-muted: #64748b;
+    --accent: #2563eb;
+    --accent-hover: #1d4ed8;
+    --accent-soft: #eff6ff;
+    --danger: #dc2626;
+    --danger-soft: #fef2f2;
+    --success: #16a34a;
+    --success-soft: #f0fdf4;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+    --shadow-md: 0 6px 20px rgba(15, 23, 42, 0.12);
+    --shadow-lg: 0 18px 48px rgba(15, 23, 42, 0.22);
+    --radius: 10px;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: var(--text);
+    background: #ffffff;
+    user-select: none;
+  }
+
+  .hidden {
+    display: none !important;
+  }
+
+  /* ===== APP LAYOUT ===== */
+  #app {
+    display: flex;
+    flex-direction: column;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ===== TOP HEADER & TABS ===== */
+  #header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    min-height: 48px;
+    padding: 6px 12px;
+    background: var(--bg-ui);
+    border-bottom: 1px solid var(--border);
+    z-index: 40;
+    flex-shrink: 0;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--text);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .brand-logo {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #2563eb, #4f46e5);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .tabs-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    padding: 2px 0;
+  }
+
+  #tabs-list {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .student-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg-subtle);
+    color: var(--text-muted);
+    font-size: 12.5px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+
+  .student-tab:hover {
+    background: var(--bg-hover);
+    color: var(--text);
+  }
+
+  .student-tab.active {
+    background: var(--accent-soft);
+    border-color: #93c5fd;
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .tab-title {
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .tab-rename-input {
+    width: 110px;
+    height: 22px;
+    padding: 0 6px;
+    border: 1px solid var(--accent);
+    border-radius: 5px;
+    font-family: inherit;
+    font-size: 12px;
+    color: var(--text);
+    background: #fff;
+    outline: none;
+  }
+
+  .tab-icon-btn {
+    border: none;
+    background: transparent;
+    color: inherit;
+    font-size: 11px;
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 5px;
+    line-height: 1;
+    opacity: 0.75;
+    transition: background 0.12s, opacity 0.12s, color 0.12s;
+  }
+
+  .tab-icon-btn:hover {
+    opacity: 1;
+    background: rgba(15, 23, 42, 0.08);
+  }
+
+  .tab-icon-btn.confirm-del {
+    background: var(--danger);
+    color: #fff;
+    opacity: 1;
+    font-weight: 600;
+    padding: 3px 6px;
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    height: 32px;
+    padding: 0 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg-ui);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.14s, border-color 0.14s, color 0.14s, transform 0.08s;
+  }
+
+  .btn:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-strong);
+  }
+
+  .btn:active {
+    transform: translateY(0.5px);
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  .btn-primary:hover {
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
+    color: #fff;
+  }
+
+  .btn-secondary {
+    background: var(--bg-subtle);
+    border-color: var(--border);
+    color: var(--text);
+  }
+
+  .btn-danger {
+    background: var(--danger-soft);
+    border-color: #fecaca;
+    color: var(--danger);
+  }
+
+  .btn-danger:hover {
+    background: #fee2e2;
+    border-color: #fca5a5;
+  }
+
+  .btn-success {
+    background: var(--success-soft);
+    border-color: #bbf7d0;
+    color: var(--success);
+  }
+
+  .btn-sm {
+    height: 28px;
+    padding: 0 8px;
+    font-size: 12px;
+  }
+
+  /* ===== PROPERTIES BAR ===== */
+  #props-bar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-height: 44px;
+    padding: 6px 12px;
+    background: var(--bg-subtle);
+    border-bottom: 1px solid var(--border);
+    z-index: 35;
+    flex-shrink: 0;
+  }
+
+  .prop-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding-right: 8px;
+    border-right: 1px solid var(--border);
+  }
+
+  .prop-group:last-child {
+    border-right: none;
+    padding-right: 0;
+  }
+
+  .prop-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .color-swatch {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.18);
+    cursor: pointer;
+    transition: transform 0.12s, border-color 0.12s;
+  }
+
+  .color-swatch:hover {
+    transform: scale(1.12);
+  }
+
+  .color-swatch.active {
+    border-color: var(--accent);
+    transform: scale(1.14);
+  }
+
+  input[type="color"].color-picker-btn {
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    background: #fff;
+    cursor: pointer;
+    overflow: hidden;
+  }
+
+  .range-slider {
+    width: 82px;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+
+  .size-badge {
+    min-width: 28px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  /* ===== CONTEXTUAL AXIS BAR ===== */
+  #axis-props-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 3px 10px;
+    background: var(--accent-soft);
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+    flex-wrap: wrap;
+  }
+
+  .stepper {
+    display: inline-flex;
+    align-items: center;
+    background: #fff;
+    border: 1px solid var(--border-strong);
+    border-radius: 7px;
+    overflow: hidden;
+  }
+
+  .stepper button {
+    width: 24px;
+    height: 24px;
+    border: none;
+    background: transparent;
+    color: var(--text);
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  .stepper button:hover {
+    background: var(--bg-hover);
+  }
+
+  .stepper span {
+    min-width: 38px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 0 4px;
+  }
+
+  .axis-color-select {
+    height: 26px;
+    border-radius: 7px;
+    border: 1px solid var(--border-strong);
+    background: #fff;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 12px;
+    padding: 0 6px;
+    cursor: pointer;
+  }
+
+  /* ===== WORKSPACE ===== */
+  #workspace {
+    position: relative;
+    flex: 1;
+    width: 100%;
+    min-height: 0;
+    overflow: hidden;
+    background: #ffffff;
+  }
+
+  #board-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+    cursor: crosshair;
+  }
+
+  /* ===== LEFT TOOLBAR ===== */
+  #toolbar {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 7px;
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: var(--shadow-md);
+    z-index: 25;
+  }
+
+  .tool-btn {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 18px;
+    transition: background 0.14s, color 0.14s, border-color 0.14s;
+  }
+
+  .tool-btn:hover {
+    background: var(--bg-hover);
+  }
+
+  .tool-btn.active {
+    background: var(--accent-soft);
+    border-color: #93c5fd;
+    color: var(--accent);
+  }
+
+  .tool-btn svg {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .tool-key {
+    position: absolute;
+    right: 3px;
+    bottom: 2px;
+    font-size: 9px;
+    font-weight: 700;
+    opacity: 0.55;
+  }
+
+  /* ===== POPOVERS ===== */
+  .popover {
+    position: fixed;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow-md);
+    padding: 12px;
+    z-index: 60;
+    min-width: 224px;
+  }
+
+  .popover-title {
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+
+  .shapes-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+
+  .shape-opt {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 9px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg-subtle);
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--text);
+    cursor: pointer;
+  }
+
+  .shape-opt:hover {
+    background: var(--bg-hover);
+  }
+
+  .shape-opt.active {
+    background: var(--accent-soft);
+    border-color: #93c5fd;
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .bg-swatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-bottom: 12px;
+    align-items: center;
+  }
+
+  .bg-swatch {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.22);
+    cursor: pointer;
+  }
+
+  .bg-swatch.active {
+    border-color: var(--accent);
+    transform: scale(1.08);
+  }
+
+  .pattern-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+
+  .checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    color: var(--text);
+    cursor: pointer;
+  }
+
+  /* ===== ZOOM CONTROLS ===== */
+  #zoom-controls {
+    position: absolute;
+    right: 16px;
+    bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: var(--shadow-md);
+    z-index: 25;
+  }
+
+  #zoom-controls button {
+    height: 30px;
+    min-width: 30px;
+    padding: 0 8px;
+    border: none;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  #zoom-controls button:hover {
+    background: var(--bg-hover);
+  }
+
+  /* ===== INLINE TEXT EDITOR ===== */
+  #inline-text-editor {
+    position: absolute;
+    z-index: 30;
+    min-width: 140px;
+    min-height: 36px;
+    padding: 6px 8px;
+    border: 2px solid var(--accent);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.94);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 18px;
+    line-height: 1.3;
+    outline: none;
+    resize: both;
+    box-shadow: var(--shadow-md);
+  }
+
+  /* ===== MODALS ===== */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.52);
+    backdrop-filter: blur(3px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    z-index: 100;
+  }
+
+  .modal-card {
+    width: 100%;
+    max-width: 440px;
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-lg);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-height: 92vh;
+    overflow-y: auto;
+  }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .modal-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .modal-close {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    border: none;
+    background: var(--bg-subtle);
+    color: var(--text-muted);
+    font-size: 16px;
+    cursor: pointer;
+  }
+
+  .modal-close:hover {
+    background: var(--bg-hover);
+    color: var(--text);
+  }
+
+  .modal-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .modal-section-title {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+  }
+
+  .modal-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .text-input {
+    width: 100%;
+    height: 38px;
+    padding: 0 12px;
+    border-radius: 9px;
+    border: 1px solid var(--border-strong);
+    font-family: inherit;
+    font-size: 13.5px;
+    color: var(--text);
+    background: #ffffff;
+    outline: none;
+  }
+
+  .text-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+  }
+
+  .status-box {
+    font-size: 12.5px;
+    line-height: 1.5;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: var(--accent-soft);
+    border: 1px solid #bfdbfe;
+    color: #1e3a8a;
+  }
+
+  .status-box.ok {
+    background: var(--success-soft);
+    border-color: #bbf7d0;
+    color: #166534;
+  }
+
+  .status-box.warn {
+    background: #fffbeb;
+    border-color: #fde68a;
+    color: #92400e;
+  }
+
+  .status-box.err {
+    background: var(--danger-soft);
+    border-color: #fecaca;
+    color: #991b1b;
+  }
+
+  /* ===== WELCOME & OPTIONAL REGISTRATION EXTRAS ===== */
+  .welcome-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    padding: 4px 10px;
+    border-radius: 999px;
+    width: fit-content;
+  }
+
+  .welcome-desc {
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--text-muted);
+  }
+
+  .welcome-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: var(--bg-subtle);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-size: 13px;
+    color: var(--text);
+  }
+
+  .welcome-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    line-height: 1.45;
+  }
+
+  .cloud-optional-note {
+    font-size: 12px;
+    line-height: 1.5;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: var(--bg-subtle);
+    border: 1px dashed var(--border-strong);
+    color: var(--text-muted);
+  }
+
+  .cloud-optional-note strong {
+    color: var(--text);
+  }
+
+  /* ===== INTERACTIVE SPOTLIGHT TUTORIAL ===== */
+  #tour-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 150;
+    pointer-events: auto;
+  }
+
+  #tour-spotlight {
+    position: fixed;
+    border-radius: 12px;
+    box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.62), 0 0 0 3px #60a5fa;
+    pointer-events: none;
+    transition: top 0.22s ease, left 0.22s ease, width 0.22s ease, height 0.22s ease;
+  }
+
+  #tour-card {
+    position: fixed;
+    width: 340px;
+    max-width: calc(100vw - 24px);
+    background: #ffffff;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-lg);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 155;
+    transition: top 0.22s ease, left 0.22s ease;
+  }
+
+  .tour-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  #tour-step-badge {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    padding: 3px 9px;
+    border-radius: 999px;
+  }
+
+  .tour-skip-link {
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  .tour-skip-link:hover {
+    color: var(--text);
+    text-decoration: underline;
+  }
+
+  #tour-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  #tour-text {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text-muted);
+  }
+
+  .tour-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 4px;
+  }
+
+  #tour-dots {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .tour-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--border-strong);
+    transition: background 0.15s, transform 0.15s;
+  }
+
+  .tour-dot.active {
+    background: var(--accent);
+    transform: scale(1.25);
+  }
+
+  .tour-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .tour-btn {
+    height: 32px;
+    padding: 0 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg-subtle);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .tour-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .tour-btn.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #ffffff;
+  }
+
+  .tour-btn.primary:hover {
+    background: var(--accent-hover);
+  }
+
+  /* ===== TOAST ===== */
+  #toast {
+    position: fixed;
+    left: 50%;
+    bottom: 22px;
+    transform: translateX(-50%) translateY(16px);
+    background: #0f172a;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 9px 16px;
+    border-radius: 10px;
+    box-shadow: var(--shadow-md);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s, transform 0.2s;
+    z-index: 200;
+    max-width: 90vw;
+    text-align: center;
+  }
+
+  #toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  @media (max-width: 900px) {
+    .brand span { display: none; }
+    .btn .btn-text-hide-sm { display: none; }
+    #toolbar { left: 8px; padding: 5px; }
+    .tool-btn { width: 36px; height: 36px; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- ===== TOP HEADER ===== -->
+  <header id="header">
+    <div class="brand">
+      <div class="brand-logo">E</div>
+      <span>EduBoard Pro 3.4</span>
+    </div>
+
+    <div class="tabs-wrapper">
+      <div id="tabs-list"></div>
+      <button id="add-tab-btn" class="btn btn-sm" title="Добавить новую вкладку ученика">+ Ученик</button>
+    </div>
+
+    <div class="header-actions">
+      <button id="tour-open-btn" class="btn btn-sm" title="Интерактивное обучение">? <span class="btn-text-hide-sm">Обучение</span></button>
+      <button id="export-json-btn" class="btn btn-sm" title="Экспорт всех досок в JSON">⬇️ <span class="btn-text-hide-sm">Экспорт</span></button>
+      <button id="import-json-btn" class="btn btn-sm" title="Импорт досок из JSON">⬆️ <span class="btn-text-hide-sm">Импорт</span></button>
+      <input id="import-file-input" type="file" accept=".json,application/json" class="hidden">
+      <button id="cloud-quick-sync-btn" class="btn btn-sm btn-success hidden" title="Синхронизировать с облаком">↻ Синхр.</button>
+      <button id="cloud-open-btn" class="btn btn-sm btn-primary" title="Облачный аккаунт">☁️ <span id="cloud-btn-label">Аккаунт</span></button>
+    </div>
+  </header>
+
+  <!-- ===== TOP PROPERTIES BAR ===== -->
+  <div id="props-bar">
+    <div class="prop-group" id="color-swatches-group">
+      <button class="color-swatch active" data-color="#0f172a" style="background:#0f172a;" title="Чёрный"></button>
+      <button class="color-swatch" data-color="#2563eb" style="background:#2563eb;" title="Синий"></button>
+      <button class="color-swatch" data-color="#dc2626" style="background:#dc2626;" title="Красный"></button>
+      <button class="color-swatch" data-color="#16a34a" style="background:#16a34a;" title="Зелёный"></button>
+      <button class="color-swatch" data-color="#ea580c" style="background:#ea580c;" title="Оранжевый"></button>
+      <button class="color-swatch" data-color="#9333ea" style="background:#9333ea;" title="Фиолетовый"></button>
+      <button class="color-swatch" data-color="#ffffff" style="background:#ffffff;" title="Белый"></button>
+      <input id="custom-color-input" type="color" class="color-picker-btn" value="#0f172a" title="Свой цвет">
+    </div>
+
+    <div class="prop-group">
+      <span class="prop-label">Толщина:</span>
+      <input id="stroke-size-slider" type="range" min="1" max="30" value="3" class="range-slider">
+      <span id="stroke-size-label" class="size-badge">3px</span>
+    </div>
+
+    <div class="prop-group">
+      <button id="undo-btn" class="btn btn-sm" title="Отменить (Ctrl+Z)">↩️</button>
+      <button id="redo-btn" class="btn btn-sm" title="Повторить (Ctrl+Y)">↪️</button>
+      <button id="clear-board-btn" class="btn btn-sm btn-danger" title="Очистить текущую доску">🗑️ Очистить</button>
+    </div>
+
+    <div class="prop-group">
+      <button id="add-axis-btn" class="btn btn-sm btn-primary" title="Добавить подвижную ось координат X/Y">+ Ось X/Y</button>
+      <button id="bg-open-btn" class="btn btn-sm" title="Цвет и разметка фона">🎨 Фон</button>
+    </div>
+
+    <!-- Contextual Axis Properties -->
+    <div id="axis-props-bar" class="hidden">
+      <span class="prop-label" style="color:var(--accent);font-weight:700;">Ось X/Y:</span>
+      <div class="stepper" title="Диапазон чисел на осях (от 2 до 50)">
+        <button id="axis-range-dec" type="button">−</button>
+        <span id="axis-range-val">±8</span>
+        <button id="axis-range-inc" type="button">+</button>
+      </div>
+      <div class="stepper" title="Шаг сетки оси в пикселях">
+        <button id="axis-step-dec" type="button">−</button>
+        <span id="axis-step-val">32px</span>
+        <button id="axis-step-inc" type="button">+</button>
+      </div>
+      <select id="axis-color-select" class="axis-color-select" title="Цвет выбранной оси">
+        <option value="auto">Цвет: Авто</option>
+        <option value="#ffffff">Белый</option>
+        <option value="#0f172a">Чёрный</option>
+        <option value="#2563eb">Синий</option>
+        <option value="#dc2626">Красный</option>
+        <option value="#facc15">Жёлтый</option>
+      </select>
+      <button id="axis-delete-btn" class="btn btn-sm btn-danger" type="button">Удалить ось</button>
+    </div>
+  </div>
+
+  <!-- ===== MAIN WORKSPACE ===== -->
+  <main id="workspace">
+    <canvas id="board-canvas"></canvas>
+
+    <!-- Left Vertical Toolbar -->
+    <aside id="toolbar" aria-label="Инструменты рисования">
+      <button class="tool-btn" data-tool="select" title="Выбор и перемещение (V)">
+        <svg viewBox="0 0 24 24"><path d="M5 3l14 9-6 1.5L10.5 20z"/></svg>
+        <span class="tool-key">V</span>
+      </button>
+      <button class="tool-btn" data-tool="pan" title="Рука / перемещение холста (H или Пробел)">
+        <svg viewBox="0 0 24 24"><path d="M18 11V6a2 2 0 0 0-4 0v4"/><path d="M14 10V4a2 2 0 0 0-4 0v6"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>
+        <span class="tool-key">H</span>
+      </button>
+      <button class="tool-btn active" data-tool="pen" title="Перо (P)">
+        <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        <span class="tool-key">P</span>
+      </button>
+      <button class="tool-btn" data-tool="marker" title="Маркер (M)">
+        <svg viewBox="0 0 24 24"><path d="m9 11-6 6v3h9l3-3"/><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"/></svg>
+        <span class="tool-key">M</span>
+      </button>
+      <button class="tool-btn" data-tool="eraser" title="Ластик (E)">
+        <svg viewBox="0 0 24 24"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg>
+        <span class="tool-key">E</span>
+      </button>
+      <button class="tool-btn" data-tool="text" title="Текст (T)">
+        <svg viewBox="0 0 24 24"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+        <span class="tool-key">T</span>
+      </button>
+      <button id="shapes-tool-btn" class="tool-btn" data-tool="shape" title="Фигуры (S)">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1"/><circle cx="17" cy="17" r="4"/><path d="M17 3l4 7h-8z"/></svg>
+        <span class="tool-key">S</span>
+      </button>
+      <button class="tool-btn" data-tool="fill" title="Умная заливка / Ведро (G)">
+        <svg viewBox="0 0 24 24"><path d="m19 11-8-8-8.6 8.6a2 2 0 0 0 0 2.8l5.2 5.2c.8.8 2 .8 2.8 0L19 11Z"/><path d="m5 2 5 5"/><path d="M2 13h15"/><path d="M22 20a2 2 0 1 1-4 0c0-1.6 1.7-2.4 2-4 .3 1.6 2 2.4 2 4Z"/></svg>
+        <span class="tool-key">G</span>
+      </button>
+      <button class="tool-btn" data-tool="laser" title="Лазерная указка (L)">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3"/><path d="M12 19v3"/><path d="M2 12h3"/><path d="M19 12h3"/><path d="m4.9 4.9 2.1 2.1"/><path d="m17 17 2.1 2.1"/><path d="m19.1 4.9-2.1 2.1"/><path d="m7 17-2.1 2.1"/></svg>
+        <span class="tool-key">L</span>
+      </button>
+    </aside>
+
+    <!-- Zoom Controls -->
+    <div id="zoom-controls">
+      <button id="zoom-out-btn" title="Уменьшить">−</button>
+      <button id="zoom-reset-btn" title="Сбросить масштаб до 100%">100%</button>
+      <button id="zoom-in-btn" title="Увеличить">+</button>
+    </div>
+
+    <!-- Floating Inline Text Editor -->
+    <textarea id="inline-text-editor" class="hidden" placeholder="Введите текст... (Ctrl+Enter — готово)"></textarea>
+  </main>
+</div>
+
+<!-- ===== SHAPES POPOVER ===== -->
+<div id="shapes-popover" class="popover hidden">
+  <div class="popover-title">Выберите фигуру</div>
+  <div class="shapes-grid">
+    <button class="shape-opt active" data-shape="line">╱ Линия</button>
+    <button class="shape-opt" data-shape="arrow">↗ Стрелка</button>
+    <button class="shape-opt" data-shape="rect">▭ Прямоуг.</button>
+    <button class="shape-opt" data-shape="circle">◯ Круг</button>
+    <button class="shape-opt" data-shape="triangle">△ Треуг.</button>
+  </div>
+  <label class="checkbox-row">
+    <input type="checkbox" id="shape-fill-chk">
+    <span>Заливать фигуру внутри</span>
+  </label>
+</div>
+
+<!-- ===== BACKGROUND POPOVER ===== -->
+<div id="bg-popover" class="popover hidden">
+  <div class="popover-title">Цвет фона</div>
+  <div class="bg-swatches">
+    <button class="bg-swatch" data-bg="#ffffff" style="background:#ffffff;" title="Белый"></button>
+    <button class="bg-swatch" data-bg="#fefce8" style="background:#fefce8;" title="Кремовый"></button>
+    <button class="bg-swatch" data-bg="#f3f4f6" style="background:#f3f4f6;" title="Светло-серый"></button>
+    <button class="bg-swatch" data-bg="#1e293b" style="background:#1e293b;" title="Тёмная доска"></button>
+    <button class="bg-swatch" data-bg="#14532d" style="background:#14532d;" title="Зелёная школьная доска"></button>
+    <button class="bg-swatch" data-bg="#000000" style="background:#000000;" title="Чёрный"></button>
+    <input id="bg-custom-color" type="color" class="color-picker-btn" value="#ffffff" title="Свой цвет фона">
+  </div>
+  <div class="popover-title">Разметка листа</div>
+  <div class="pattern-grid">
+    <button class="shape-opt" data-pattern="grid">▦ Клетка</button>
+    <button class="shape-opt" data-pattern="dots">⣿ Точки</button>
+    <button class="shape-opt" data-pattern="lines">☰ Линейка</button>
+    <button class="shape-opt" data-pattern="none">▢ Чистый лист</button>
+  </div>
+</div>
+
+<!-- ===== CLOUD ACCOUNT MODAL ===== -->
+<div id="cloud-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-label="Облачный аккаунт">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div class="modal-title">☁️ Облачный аккаунт</div>
+      <button id="cloud-close-btn" class="modal-close" aria-label="Закрыть">✕</button>
+    </div>
+
+    <div id="cloud-status" class="status-box">
+      Войдите по логину и паролю, чтобы сохранять все вкладки учеников в облако Cloudflare KV и открывать их с любого устройства.
+    </div>
+
+    <div class="cloud-optional-note">
+      <strong>Регистрация не обязательна:</strong> если пропустить этот шаг, все ваши доски, вкладки и рисунки всё равно будут <strong>автоматически сохраняться</strong> в этом браузере. Аккаунт нужен только для синхронизации между разными устройствами.
+    </div>
+
+    <div class="modal-section">
+      <div class="modal-section-title">Данные для входа</div>
+      <input id="cloud-login-input" type="text" class="text-input" placeholder="Логин (например: teacher_ivan)">
+      <input id="cloud-pass-input" type="password" class="text-input" placeholder="Пароль (хешируется в SHA-256 на устройстве)">
+      <label class="checkbox-row">
+        <input type="checkbox" id="cloud-autosync-chk" checked>
+        <span>Автосохранение в облако при изменениях</span>
+      </label>
+    </div>
+
+    <div class="modal-row">
+      <button id="cloud-load-btn" class="btn btn-primary" style="flex:1;">Войти и загрузить</button>
+      <button id="cloud-save-btn" class="btn btn-secondary" style="flex:1;">Сохранить в облако</button>
+    </div>
+    <button id="cloud-skip-btn" class="btn btn-secondary" style="width:100%;">Пропустить и перейти к доске</button>
+    <button id="cloud-logout-btn" class="btn btn-danger hidden" style="width:100%;">Выйти из аккаунта</button>
+  </div>
+</div>
+
+<!-- ===== WELCOME ONBOARDING MODAL ===== -->
+<div id="welcome-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-label="Добро пожаловать в EduBoard Pro">
+  <div class="modal-card" style="max-width:460px;">
+    <div class="welcome-badge">👋 EduBoard Pro 3.4</div>
+    <div class="modal-title" style="font-size:20px;">Добро пожаловать в EduBoard Pro!</div>
+    <p class="welcome-desc">
+      Бесконечная онлайн-доска для преподавателей и учеников. Пройдите короткую интерактивную обучалку (меньше минуты), чтобы быстро освоить все главные возможности:
+    </p>
+    <ul class="welcome-list">
+      <li><span>📑</span><span><strong>Вкладки учеников</strong> — отдельная доска на каждого с быстрым переименованием.</span></li>
+      <li><span>📐</span><span><strong>Оси координат, фигуры и заливка</strong> — подвижные графики X/Y, автоконтраст и «Ведро».</span></li>
+      <li><span>💾</span><span><strong>Автосохранение и бэкап</strong> — автоматическое сохранение в браузере, облако и экспорт в JSON.</span></li>
+    </ul>
+    <div class="modal-row" style="margin-top:4px;">
+      <button id="welcome-start-tour-btn" class="btn btn-primary" style="flex:1;">Пройти обучение</button>
+      <button id="welcome-skip-tour-btn" class="btn btn-secondary" style="flex:1;">Пропустить обучение</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== INTERACTIVE SPOTLIGHT TUTORIAL OVERLAY ===== -->
+<div id="tour-overlay" class="hidden" role="dialog" aria-modal="true" aria-label="Интерактивное обучение">
+  <div id="tour-spotlight"></div>
+  <div id="tour-card">
+    <div class="tour-header">
+      <span id="tour-step-badge">Шаг 1 из 7</span>
+      <button id="tour-skip-btn" class="tour-skip-link" type="button">Пропустить</button>
+    </div>
+    <div id="tour-title">Заголовок</div>
+    <div id="tour-text">Описание шага</div>
+    <div class="tour-footer">
+      <div id="tour-dots"></div>
+      <div class="tour-actions">
+        <button id="tour-prev-btn" class="tour-btn" type="button">Назад</button>
+        <button id="tour-next-btn" class="tour-btn primary" type="button">Далее</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div id="toast"></div>
+
+<script>
+(() => {
+  'use strict';
+
+  // ===== STORAGE KEYS =====
+  const STORAGE_KEY = 'eduboard_pro_3_4_data';
+  const LEGACY_KEYS = ['eduboard_pro_3_3_data', 'eduboard_pro_3_2_data'];
+  const CLOUD_SESSION_KEY = 'eduboard_pro_3_4_cloud';
+  const ONBOARD_KEY = 'eduboard_onboarded_v1';
+
+  // ===== CORE HELPERS =====
+  function uid(prefix = 'id') {
+    return prefix + '_' + Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
+  }
+
+  function clamp(v, min, max) {
+    return Math.max(min, Math.min(max, v));
+  }
+
+  function hexToRgb(hex) {
+    let h = String(hex || '#000000').replace('#', '').trim();
+    if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+    const num = parseInt(h, 16);
+    if (Number.isNaN(num)) return { r: 0, g: 0, b: 0 };
+    return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+  }
+
+  function isColorDark(hex) {
+    const { r, g, b } = hexToRgb(hex);
+    const luma = 0.299 * r + 0.587 * g + 0.114 * b;
+    return luma < 128;
+  }
+
+  function deepClone(obj) {
+    return JSON.parse(JSON.stringify(obj));
+  }
+
+  async function sha256Hex(str) {
+    try {
+      if (window.crypto && window.crypto.subtle) {
+        const buf = await window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+        return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+      }
+    } catch (e) {
+      // Fallback below
+    }
+    let h1 = 0xdeadbeef ^ str.length;
+    let h2 = 0x41c6ce57 ^ str.length;
+    for (let i = 0; i < str.length; i++) {
+      const ch = str.charCodeAt(i);
+      h1 = Math.imul(h1 ^ ch, 2654435761);
+      h2 = Math.imul(h2 ^ ch, 1597334677);
+    }
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+    return (h2 >>> 0).toString(16).padStart(8, '0') + (h1 >>> 0).toString(16).padStart(8, '0');
+  }
+
+  // ===== TOAST =====
+  const toastEl = document.getElementById('toast');
+  let toastTimer = null;
+  function showToast(msg, ms = 2600) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove('show'), ms);
+  }
+
+  // ===== IMAGE CACHE =====
+  const imgCache = new Map();
+  function getCachedImage(src) {
+    if (!src) return null;
+    let img = imgCache.get(src);
+    if (!img) {
+      img = new Image();
+      img.onload = () => render();
+      img.src = src;
+      imgCache.set(src, img);
+    }
+    return img.complete && img.naturalWidth > 0 ? img : null;
+  }
+
+  // ===== APPLICATION STATE =====
+  function createTab(name = 'Ученик 1') {
+    return {
+      id: uid('tab'),
+      name,
+      bgColor: '#ffffff',
+      bgPattern: 'grid',
+      camera: { x: 0, y: 0, zoom: 1 },
+      objects: [],
+      history: [],
+      redoStack: []
+    };
+  }
+
+  let state = {
+    tabs: [createTab('Ученик 1')],
+    activeTabId: null
+  };
+  state.activeTabId = state.tabs[0].id;
+
+  let currentTool = 'pen';
+  let currentColor = '#0f172a';
+  let currentSize = 3;
+  let currentShape = 'line';
+  let currentShapeFill = false;
+
+  let selectedId = null;
+  let spacePressed = false;
+  let isPointerDown = false;
+  let activePointerId = null;
+  let interactionMode = null; // 'pan' | 'draw' | 'shape' | 'drag' | 'erase' | 'laser'
+  let dragStartWorld = { x: 0, y: 0 };
+  let dragStartScreen = { x: 0, y: 0 };
+  let dragCamStart = { x: 0, y: 0 };
+  let dragObjSnapshot = null;
+  let draftObj = null;
+  let laserTrail = [];
+  let laserAnimId = null;
+
+  let pendingDeleteTabId = null;
+  let pendingDeleteTimer = null;
+  let clearConfirmArmed = false;
+  let clearConfirmTimer = null;
+
+  let cloudSession = null;
+
+  function getActiveTab() {
+    let tab = state.tabs.find(t => t.id === state.activeTabId);
+    if (!tab) {
+      if (!state.tabs.length) state.tabs.push(createTab('Ученик 1'));
+      tab = state.tabs[0];
+      state.activeTabId = tab.id;
+    }
+    return tab;
+  }
+
+  // ===== PERSISTENCE =====
+  let saveTimer = null;
+  let cloudAutosyncTimer = null;
+
+  function serializeState() {
+    return {
+      version: '3.4',
+      activeTabId: state.activeTabId,
+      tabs: state.tabs.map(t => ({
+        id: t.id,
+        name: t.name,
+        bgColor: t.bgColor || '#ffffff',
+        bgPattern: t.bgPattern || 'grid',
+        camera: t.camera || { x: 0, y: 0, zoom: 1 },
+        objects: t.objects || []
+      }))
+    };
+  }
+
+  function hydrateState(parsed) {
+    if (!parsed || !Array.isArray(parsed.tabs) || !parsed.tabs.length) return false;
+    state.tabs = parsed.tabs.map((t, idx) => ({
+      id: t.id || uid('tab'),
+      name: t.name || `Ученик ${idx + 1}`,
+      bgColor: t.bgColor || '#ffffff',
+      bgPattern: t.bgPattern || 'grid',
+      camera: {
+        x: Number(t.camera && t.camera.x) || 0,
+        y: Number(t.camera && t.camera.y) || 0,
+        zoom: clamp(Number(t.camera && t.camera.zoom) || 1, 0.2, 4)
+      },
+      objects: Array.isArray(t.objects) ? t.objects : [],
+      history: [],
+      redoStack: []
+    }));
+    state.activeTabId = state.tabs.some(t => t.id === parsed.activeTabId)
+      ? parsed.activeTabId
+      : state.tabs[0].id;
+    return true;
+  }
+
+  function loadLocal() {
+    try {
+      let raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) {
+        for (const k of LEGACY_KEYS) {
+          raw = localStorage.getItem(k);
+          if (raw) break;
+        }
+      }
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        hydrateState(parsed);
+      }
+    } catch (err) {
+      console.warn('Не удалось загрузить локальные данные:', err);
+    }
+  }
+
+  function scheduleSave(broadcast = true) {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(serializeState()));
+      } catch (err) {
+        console.warn('Ошибка сохранения localStorage:', err);
+      }
+    }, 180);
+
+    const autosyncChk = document.getElementById('cloud-autosync-chk');
+    if (cloudSession && cloudSession.login && autosyncChk && autosyncChk.checked) {
+      clearTimeout(cloudAutosyncTimer);
+      cloudAutosyncTimer = setTimeout(() => cloudSync('save', true), 2500);
+    }
+  }
+
+  // ===== UNDO / REDO =====
+  function pushHistory(tab) {
+    tab.history.push({
+      bgColor: tab.bgColor,
+      bgPattern: tab.bgPattern,
+      objects: deepClone(tab.objects)
+    });
+    if (tab.history.length > 40) tab.history.shift();
+    tab.redoStack = [];
+  }
+
+  function undo() {
+    const tab = getActiveTab();
+    if (!tab.history.length) return;
+    tab.redoStack.push({
+      bgColor: tab.bgColor,
+      bgPattern: tab.bgPattern,
+      objects: deepClone(tab.objects)
+    });
+    const prev = tab.history.pop();
+    tab.bgColor = prev.bgColor;
+    tab.bgPattern = prev.bgPattern;
+    tab.objects = prev.objects;
+    if (selectedId && !tab.objects.some(o => o.id === selectedId)) selectedId = null;
+    updateBgPopoverUI();
+    updateAxisBarUI();
+    render();
+    scheduleSave();
+  }
+
+  function redo() {
+    const tab = getActiveTab();
+    if (!tab.redoStack.length) return;
+    tab.history.push({
+      bgColor: tab.bgColor,
+      bgPattern: tab.bgPattern,
+      objects: deepClone(tab.objects)
+    });
+    const next = tab.redoStack.pop();
+    tab.bgColor = next.bgColor;
+    tab.bgPattern = next.bgPattern;
+    tab.objects = next.objects;
+    if (selectedId && !tab.objects.some(o => o.id === selectedId)) selectedId = null;
+    updateBgPopoverUI();
+    updateAxisBarUI();
+    render();
+    scheduleSave();
+  }
+
+  // ===== CANVAS & COORDINATES =====
+  const workspaceEl = document.getElementById('workspace');
+  const canvas = document.getElementById('board-canvas');
+  const ctx = canvas.getContext('2d');
+  let canvasW = 800;
+  let canvasH = 600;
+  let dpr = window.devicePixelRatio || 1;
+
+  function resizeCanvas() {
+    const rect = workspaceEl.getBoundingClientRect();
+    canvasW = Math.max(1, Math.floor(rect.width));
+    canvasH = Math.max(1, Math.floor(rect.height));
+    dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.floor(canvasW * dpr);
+    canvas.height = Math.floor(canvasH * dpr);
+    canvas.style.width = canvasW + 'px';
+    canvas.style.height = canvasH + 'px';
+    render();
+  }
+
+  function screenToWorld(sx, sy) {
+    const tab = getActiveTab();
+    return {
+      x: (sx - canvasW / 2) / tab.camera.zoom + tab.camera.x,
+      y: (sy - canvasH / 2) / tab.camera.zoom + tab.camera.y
+    };
+  }
+
+  function updateZoomLabel() {
+    const tab = getActiveTab();
+    document.getElementById('zoom-reset-btn').textContent = Math.round(tab.camera.zoom * 100) + '%';
+  }
+
+  function setZoom(newZoom, pivotScreenX = canvasW / 2, pivotScreenY = canvasH / 2) {
+    const tab = getActiveTab();
+    const before = screenToWorld(pivotScreenX, pivotScreenY);
+    tab.camera.zoom = clamp(newZoom, 0.2, 4);
+    const after = screenToWorld(pivotScreenX, pivotScreenY);
+    tab.camera.x += before.x - after.x;
+    tab.camera.y += before.y - after.y;
+    updateZoomLabel();
+    render();
+    scheduleSave(false);
+  }
+
+  // ===== RENDERING ENGINE =====
+  function drawBackground(c, tab, w, h) {
+    c.fillStyle = tab.bgColor || '#ffffff';
+    c.fillRect(0, 0, w, h);
+
+    const pattern = tab.bgPattern || 'grid';
+    if (pattern === 'none') return;
+
+    const dark = isColorDark(tab.bgColor || '#ffffff');
+    const step = 32;
+    const zoom = tab.camera.zoom;
+    const scaledStep = step * zoom;
+    if (scaledStep < 6) return;
+
+    const leftWorld = tab.camera.x - (w / 2) / zoom;
+    const topWorld = tab.camera.y - (h / 2) / zoom;
+    const startX = Math.floor(leftWorld / step) * step;
+    const startY = Math.floor(topWorld / step) * step;
+    const rightWorld = tab.camera.x + (w / 2) / zoom;
+    const bottomWorld = tab.camera.y + (h / 2) / zoom;
+
+    c.save();
+    if (pattern === 'grid') {
+      c.strokeStyle = dark ? 'rgba(255,255,255,0.14)' : 'rgba(15,23,42,0.08)';
+      c.lineWidth = 1;
+      c.beginPath();
+      for (let x = startX; x <= rightWorld; x += step) {
+        const sx = (x - tab.camera.x) * zoom + w / 2;
+        c.moveTo(sx, 0);
+        c.lineTo(sx, h);
+      }
+      for (let y = startY; y <= bottomWorld; y += step) {
+        const sy = (y - tab.camera.y) * zoom + h / 2;
+        c.moveTo(0, sy);
+        c.lineTo(w, sy);
+      }
+      c.stroke();
+    } else if (pattern === 'lines') {
+      c.strokeStyle = dark ? 'rgba(255,255,255,0.16)' : 'rgba(37,99,235,0.13)';
+      c.lineWidth = 1;
+      c.beginPath();
+      for (let y = startY; y <= bottomWorld; y += step) {
+        const sy = (y - tab.camera.y) * zoom + h / 2;
+        c.moveTo(0, sy);
+        c.lineTo(w, sy);
+      }
+      c.stroke();
+    } else if (pattern === 'dots') {
+      c.fillStyle = dark ? 'rgba(255,255,255,0.32)' : 'rgba(15,23,42,0.22)';
+      const r = clamp(1.3 * Math.sqrt(zoom), 0.9, 2.5);
+      for (let x = startX; x <= rightWorld; x += step) {
+        const sx = (x - tab.camera.x) * zoom + w / 2;
+        for (let y = startY; y <= bottomWorld; y += step) {
+          const sy = (y - tab.camera.y) * zoom + h / 2;
+          c.beginPath();
+          c.arc(sx, sy, r, 0, Math.PI * 2);
+          c.fill();
+        }
+      }
+    }
+    c.restore();
+  }
+
+  function drawAxisObject(c, obj, bgColor, isSelected) {
+    const range = clamp(Number(obj.range) || 8, 2, 50);
+    const step = clamp(Number(obj.step) || 32, 20, 80);
+    const halfLen = (range + 0.85) * step;
+    const darkBg = isColorDark(bgColor || '#ffffff');
+
+    let strokeColor = obj.color || 'auto';
+    if (strokeColor === 'auto') {
+      strokeColor = darkBg ? '#ffffff' : '#0f172a';
+    }
+    const haloColor = isColorDark(strokeColor)
+      ? 'rgba(255,255,255,0.82)'
+      : 'rgba(0,0,0,0.78)';
+
+    c.save();
+    c.translate(obj.x, obj.y);
+
+    if (isSelected) {
+      c.save();
+      c.strokeStyle = '#3b82f6';
+      c.lineWidth = 1.5;
+      c.setLineDash([6, 4]);
+      c.strokeRect(-halfLen - 14, -halfLen - 14, (halfLen + 14) * 2, (halfLen + 14) * 2);
+      c.restore();
+    }
+
+    c.lineCap = 'round';
+    c.lineJoin = 'round';
+
+    // Subtle contrast halo
+    c.strokeStyle = haloColor;
+    c.lineWidth = 4.2;
+    c.beginPath();
+    c.moveTo(-halfLen, 0);
+    c.lineTo(halfLen, 0);
+    c.moveTo(0, halfLen);
+    c.lineTo(0, -halfLen);
+    c.stroke();
+
+    // Main axes
+    c.strokeStyle = strokeColor;
+    c.lineWidth = 2;
+    c.beginPath();
+    c.moveTo(-halfLen, 0);
+    c.lineTo(halfLen, 0);
+    c.moveTo(0, halfLen);
+    c.lineTo(0, -halfLen);
+    c.stroke();
+
+    // Arrows
+    const arr = 9;
+    c.fillStyle = strokeColor;
+    c.beginPath();
+    c.moveTo(halfLen + 3, 0);
+    c.lineTo(halfLen - arr, -arr * 0.52);
+    c.lineTo(halfLen - arr, arr * 0.52);
+    c.closePath();
+    c.fill();
+
+    c.beginPath();
+    c.moveTo(0, -halfLen - 3);
+    c.lineTo(-arr * 0.52, -halfLen + arr);
+    c.lineTo(arr * 0.52, -halfLen + arr);
+    c.closePath();
+    c.fill();
+
+    // Ticks & Numbers
+    const tickLen = 5;
+    const labelStep = range > 24 ? 2 : 1;
+    c.font = '600 11px Inter, sans-serif';
+
+    // X ticks
+    c.textAlign = 'center';
+    c.textBaseline = 'top';
+    for (let i = -range; i <= range; i++) {
+      if (i === 0) continue;
+      const px = i * step;
+      c.strokeStyle = strokeColor;
+      c.lineWidth = 1.5;
+      c.beginPath();
+      c.moveTo(px, -tickLen);
+      c.lineTo(px, tickLen);
+      c.stroke();
+
+      if (i % labelStep === 0) {
+        c.lineWidth = 3;
+        c.strokeStyle = haloColor;
+        c.strokeText(String(i), px, 8);
+        c.fillStyle = strokeColor;
+        c.fillText(String(i), px, 8);
+      }
+    }
+
+    // Y ticks
+    c.textAlign = 'right';
+    c.textBaseline = 'middle';
+    for (let i = -range; i <= range; i++) {
+      if (i === 0) continue;
+      const py = -i * step;
+      c.strokeStyle = strokeColor;
+      c.lineWidth = 1.5;
+      c.beginPath();
+      c.moveTo(-tickLen, py);
+      c.lineTo(tickLen, py);
+      c.stroke();
+
+      if (i % labelStep === 0) {
+        c.lineWidth = 3;
+        c.strokeStyle = haloColor;
+        c.strokeText(String(i), -9, py);
+        c.fillStyle = strokeColor;
+        c.fillText(String(i), -9, py);
+      }
+    }
+
+    // Origin 0
+    c.textAlign = 'right';
+    c.textBaseline = 'top';
+    c.lineWidth = 3;
+    c.strokeStyle = haloColor;
+    c.strokeText('0', -7, 6);
+    c.fillStyle = strokeColor;
+    c.fillText('0', -7, 6);
+
+    // Axis labels X & Y
+    c.font = '700 14px Inter, sans-serif';
+    c.textAlign = 'left';
+    c.textBaseline = 'middle';
+    c.lineWidth = 3.5;
+    c.strokeStyle = haloColor;
+    c.strokeText('X', halfLen + 8, 0);
+    c.fillStyle = strokeColor;
+    c.fillText('X', halfLen + 8, 0);
+
+    c.textAlign = 'center';
+    c.textBaseline = 'bottom';
+    c.strokeStyle = haloColor;
+    c.strokeText('Y', 0, -halfLen - 8);
+    c.fillStyle = strokeColor;
+    c.fillText('Y', 0, -halfLen - 8);
+
+    c.restore();
+  }
+
+  function drawObject(c, obj, bgColor, isSelected) {
+    if (!obj) return;
+    if (obj.type === 'axis') {
+      drawAxisObject(c, obj, bgColor, isSelected);
+      return;
+    }
+
+    c.save();
+
+    if (obj.type === 'fill' || obj.type === 'image') {
+      const img = getCachedImage(obj.src);
+      if (img) {
+        c.drawImage(img, obj.x, obj.y, obj.w, obj.h);
+      }
+      if (isSelected) {
+        c.strokeStyle = '#2563eb';
+        c.lineWidth = 2;
+        c.setLineDash([6, 4]);
+        c.strokeRect(obj.x - 3, obj.y - 3, obj.w + 6, obj.h + 6);
+      }
+      c.restore();
+      return;
+    }
+
+    if (obj.type === 'stroke') {
+      const pts = obj.points || [];
+      if (pts.length > 0) {
+        c.globalAlpha = obj.opacity !== undefined ? obj.opacity : 1;
+        c.strokeStyle = obj.color || '#0f172a';
+        c.lineWidth = obj.size || 3;
+        c.lineCap = 'round';
+        c.lineJoin = 'round';
+        c.beginPath();
+        c.moveTo(pts[0].x, pts[0].y);
+        if (pts.length === 1) {
+          c.lineTo(pts[0].x + 0.1, pts[0].y + 0.1);
+        } else {
+          for (let i = 1; i < pts.length; i++) {
+            c.lineTo(pts[i].x, pts[i].y);
+          }
+        }
+        c.stroke();
+      }
+    } else if (obj.type === 'shape') {
+      c.strokeStyle = obj.color || '#0f172a';
+      c.fillStyle = obj.color || '#0f172a';
+      c.lineWidth = obj.size || 3;
+      c.lineCap = 'round';
+      c.lineJoin = 'round';
+
+      const { x1, y1, x2, y2, shape, filled } = obj;
+      if (shape === 'line' || shape === 'arrow') {
+        c.beginPath();
+        c.moveTo(x1, y1);
+        c.lineTo(x2, y2);
+        c.stroke();
+        if (shape === 'arrow') {
+          const angle = Math.atan2(y2 - y1, x2 - x1);
+          const headLen = Math.max(10, (obj.size || 3) * 3.5);
+          c.beginPath();
+          c.moveTo(x2, y2);
+          c.lineTo(x2 - headLen * Math.cos(angle - Math.PI / 6), y2 - headLen * Math.sin(angle - Math.PI / 6));
+          c.moveTo(x2, y2);
+          c.lineTo(x2 - headLen * Math.cos(angle + Math.PI / 6), y2 - headLen * Math.sin(angle + Math.PI / 6));
+          c.stroke();
+        }
+      } else if (shape === 'rect') {
+        const rx = Math.min(x1, x2);
+        const ry = Math.min(y1, y2);
+        const rw = Math.abs(x2 - x1);
+        const rh = Math.abs(y2 - y1);
+        if (filled) {
+          c.save();
+          c.globalAlpha = 0.25;
+          c.fillRect(rx, ry, rw, rh);
+          c.restore();
+        }
+        c.strokeRect(rx, ry, rw, rh);
+      } else if (shape === 'circle') {
+        const cx = (x1 + x2) / 2;
+        const cy = (y1 + y2) / 2;
+        const rx = Math.abs(x2 - x1) / 2;
+        const ry = Math.abs(y2 - y1) / 2;
+        c.beginPath();
+        c.ellipse(cx, cy, Math.max(1, rx), Math.max(1, ry), 0, 0, Math.PI * 2);
+        if (filled) {
+          c.save();
+          c.globalAlpha = 0.25;
+          c.fill();
+          c.restore();
+        }
+        c.stroke();
+      } else if (shape === 'triangle') {
+        const topX = (x1 + x2) / 2;
+        const topY = Math.min(y1, y2);
+        const botY = Math.max(y1, y2);
+        const leftX = Math.min(x1, x2);
+        const rightX = Math.max(x1, x2);
+        c.beginPath();
+        c.moveTo(topX, topY);
+        c.lineTo(rightX, botY);
+        c.lineTo(leftX, botY);
+        c.closePath();
+        if (filled) {
+          c.save();
+          c.globalAlpha = 0.25;
+          c.fill();
+          c.restore();
+        }
+        c.stroke();
+      }
+    } else if (obj.type === 'text') {
+      const fontSize = obj.fontSize || 20;
+      c.font = `600 ${fontSize}px Inter, sans-serif`;
+      c.fillStyle = obj.color || '#0f172a';
+      c.textAlign = 'left';
+      c.textBaseline = 'top';
+      const lines = String(obj.text || '').split('\n');
+      const lineH = fontSize * 1.3;
+      lines.forEach((line, idx) => {
+        c.fillText(line, obj.x, obj.y + idx * lineH);
+      });
+    }
+
+    if (isSelected) {
+      const b = getObjectBounds(obj);
+      if (b) {
+        c.globalAlpha = 1;
+        c.strokeStyle = '#2563eb';
+        c.lineWidth = 1.5;
+        c.setLineDash([6, 4]);
+        c.strokeRect(b.x - 6, b.y - 6, b.w + 12, b.h + 12);
+      }
+    }
+
+    c.restore();
+  }
+
+  function render() {
+    const tab = getActiveTab();
+    ctx.save();
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    drawBackground(ctx, tab, canvasW, canvasH);
+
+    ctx.translate(canvasW / 2, canvasH / 2);
+    ctx.scale(tab.camera.zoom, tab.camera.zoom);
+    ctx.translate(-tab.camera.x, -tab.camera.y);
+
+    // Layer 1: Flood fills & images (under axes and strokes)
+    for (const obj of tab.objects) {
+      if (obj.type === 'fill' || obj.type === 'image') {
+        drawObject(ctx, obj, tab.bgColor, obj.id === selectedId);
+      }
+    }
+
+    // Layer 2: Coordinate Axes
+    for (const obj of tab.objects) {
+      if (obj.type === 'axis') {
+        drawObject(ctx, obj, tab.bgColor, obj.id === selectedId);
+      }
+    }
+
+    // Layer 3: Strokes, Shapes, Text
+    for (const obj of tab.objects) {
+      if (obj.type !== 'fill' && obj.type !== 'image' && obj.type !== 'axis') {
+        drawObject(ctx, obj, tab.bgColor, obj.id === selectedId);
+      }
+    }
+
+    if (draftObj) {
+      drawObject(ctx, draftObj, tab.bgColor, false);
+    }
+
+    if (laserTrail.length > 1) {
+      const now = performance.now();
+      const maxAge = 1500;
+      ctx.save();
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      for (let i = 1; i < laserTrail.length; i++) {
+        const p0 = laserTrail[i - 1];
+        const p1 = laserTrail[i];
+        const age = now - p1.t;
+        if (age > maxAge) continue;
+        const alpha = clamp(1 - age / maxAge, 0, 1);
+        ctx.strokeStyle = `rgba(239, 68, 68, ${alpha * 0.9})`;
+        ctx.shadowColor = 'rgba(239, 68, 68, 0.85)';
+        ctx.shadowBlur = 12;
+        ctx.lineWidth = (4 + 3 * alpha) / tab.camera.zoom;
+        ctx.beginPath();
+        ctx.moveTo(p0.x, p0.y);
+        ctx.lineTo(p1.x, p1.y);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    ctx.restore();
+  }
+
+  function startLaserLoop() {
+    if (laserAnimId) return;
+    const step = () => {
+      const now = performance.now();
+      laserTrail = laserTrail.filter(p => now - p.t < 1500);
+      render();
+      if (laserTrail.length > 0) {
+        laserAnimId = requestAnimationFrame(step);
+      } else {
+        laserAnimId = null;
+      }
+    };
+    laserAnimId = requestAnimationFrame(step);
+  }
+
+  // ===== HIT TESTING & BOUNDS =====
+  function getObjectBounds(obj) {
+    if (!obj) return null;
+    if (obj.type === 'fill' || obj.type === 'image') {
+      return { x: obj.x, y: obj.y, w: obj.w, h: obj.h };
+    }
+    if (obj.type === 'axis') {
+      const half = ((Number(obj.range) || 8) + 0.85) * (Number(obj.step) || 32);
+      return { x: obj.x - half, y: obj.y - half, w: half * 2, h: half * 2 };
+    }
+    if (obj.type === 'stroke') {
+      const pts = obj.points || [];
+      if (!pts.length) return null;
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      for (const p of pts) {
+        if (p.x < minX) minX = p.x;
+        if (p.y < minY) minY = p.y;
+        if (p.x > maxX) maxX = p.x;
+        if (p.y > maxY) maxY = p.y;
+      }
+      return { x: minX, y: minY, w: Math.max(4, maxX - minX), h: Math.max(4, maxY - minY) };
+    }
+    if (obj.type === 'shape') {
+      const x = Math.min(obj.x1, obj.x2);
+      const y = Math.min(obj.y1, obj.y2);
+      return { x, y, w: Math.max(6, Math.abs(obj.x2 - obj.x1)), h: Math.max(6, Math.abs(obj.y2 - obj.y1)) };
+    }
+    if (obj.type === 'text') {
+      const fontSize = obj.fontSize || 20;
+      const lines = String(obj.text || '').split('\n');
+      const maxLen = Math.max(...lines.map(l => l.length), 1);
+      return {
+        x: obj.x,
+        y: obj.y,
+        w: Math.max(24, maxLen * fontSize * 0.62),
+        h: Math.max(fontSize * 1.3, lines.length * fontSize * 1.3)
+      };
+    }
+    return null;
+  }
+
+  function distToSegment(px, py, x1, y1, x2, y2) {
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const lenSq = dx * dx + dy * dy;
+    if (lenSq === 0) return Math.hypot(px - x1, py - y1);
+    const t = clamp(((px - x1) * dx + (py - y1) * dy) / lenSq, 0, 1);
+    return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
+  }
+
+  function hitTestObject(obj, wx, wy, tol) {
+    if (obj.type === 'axis') {
+      const half = ((Number(obj.range) || 8) + 0.85) * (Number(obj.step) || 32);
+      const hitTol = Math.max(14, tol);
+      const onX = Math.abs(wy - obj.y) <= hitTol && Math.abs(wx - obj.x) <= half + 12;
+      const onY = Math.abs(wx - obj.x) <= hitTol && Math.abs(wy - obj.y) <= half + 12;
+      return onX || onY;
+    }
+    if (obj.type === 'stroke') {
+      const pts = obj.points || [];
+      const t = Math.max(tol, (obj.size || 3) / 2 + 5);
+      if (pts.length === 1) return Math.hypot(wx - pts[0].x, wy - pts[0].y) <= t;
+      for (let i = 1; i < pts.length; i++) {
+        if (distToSegment(wx, wy, pts[i - 1].x, pts[i - 1].y, pts[i].x, pts[i].y) <= t) return true;
+      }
+      return false;
+    }
+    if (obj.type === 'shape') {
+      const b = getObjectBounds(obj);
+      if (!b) return false;
+      const t = Math.max(tol, (obj.size || 3) / 2 + 6);
+      if (obj.shape === 'line' || obj.shape === 'arrow') {
+        return distToSegment(wx, wy, obj.x1, obj.y1, obj.x2, obj.y2) <= t;
+      }
+      return wx >= b.x - t && wx <= b.x + b.w + t && wy >= b.y - t && wy <= b.y + b.h + t;
+    }
+    const b = getObjectBounds(obj);
+    if (!b) return false;
+    return wx >= b.x - tol && wx <= b.x + b.w + tol && wy >= b.y - tol && wy <= b.y + b.h + tol;
+  }
+
+  function findTopObjectAt(wx, wy) {
+    const tab = getActiveTab();
+    const tol = 10 / tab.camera.zoom;
+    const ordered = [
+      ...tab.objects.filter(o => o.type !== 'axis' && o.type !== 'image' && o.type !== 'fill'),
+      ...tab.objects.filter(o => o.type === 'axis'),
+      ...tab.objects.filter(o => o.type === 'image' || o.type === 'fill')
+    ];
+    for (let i = ordered.length - 1; i >= 0; i--) {
+      if (hitTestObject(ordered[i], wx, wy, tol)) return ordered[i];
+    }
+    return null;
+  }
+
+  function moveObject(obj, snapshot, dx, dy) {
+    if (obj.type === 'stroke') {
+      obj.points = snapshot.points.map(p => ({ x: p.x + dx, y: p.y + dy }));
+    } else if (obj.type === 'shape') {
+      obj.x1 = snapshot.x1 + dx;
+      obj.y1 = snapshot.y1 + dy;
+      obj.x2 = snapshot.x2 + dx;
+      obj.y2 = snapshot.y2 + dy;
+    } else {
+      obj.x = snapshot.x + dx;
+      obj.y = snapshot.y + dy;
+    }
+  }
+
+  // ===== SMART BUCKET FILL =====
+  function performSmartFill(screenX, screenY) {
+    const tab = getActiveTab();
+    const w = canvasW;
+    const h = canvasH;
+    const sx = Math.floor(screenX);
+    const sy = Math.floor(screenY);
+    if (sx < 0 || sy < 0 || sx >= w || sy >= h) return;
+
+    const off = document.createElement('canvas');
+    off.width = w;
+    off.height = h;
+    const octx = off.getContext('2d', { willReadFrequently: true });
+    octx.fillStyle = tab.bgColor || '#ffffff';
+    octx.fillRect(0, 0, w, h);
+
+    octx.save();
+    octx.translate(w / 2, h / 2);
+    octx.scale(tab.camera.zoom, tab.camera.zoom);
+    octx.translate(-tab.camera.x, -tab.camera.y);
+    for (const obj of tab.objects) {
+      if (obj.type === 'axis') continue;
+      drawObject(octx, obj, tab.bgColor, false);
+    }
+    octx.restore();
+
+    const imgData = octx.getImageData(0, 0, w, h);
+    const data = imgData.data;
+    const startIdx = (sy * w + sx) * 4;
+    const tr = data[startIdx];
+    const tg = data[startIdx + 1];
+    const tb = data[startIdx + 2];
+
+    const fillRgb = hexToRgb(currentColor);
+    const tolerance = 38;
+
+    const visited = new Uint8Array(w * h);
+    const stack = [sx, sy];
+    let hitBoundary = false;
+    let minX = w, minY = h, maxX = 0, maxY = 0;
+    let count = 0;
+
+    function matches(pos) {
+      const idx = pos * 4;
+      return (
+        Math.abs(data[idx] - tr) <= tolerance &&
+        Math.abs(data[idx + 1] - tg) <= tolerance &&
+        Math.abs(data[idx + 2] - tb) <= tolerance
+      );
+    }
+
+    while (stack.length > 0) {
+      const cy = stack.pop();
+      const cx = stack.pop();
+      let lx = cx;
+      while (lx >= 0 && !visited[cy * w + lx] && matches(cy * w + lx)) lx--;
+      lx++;
+
+      let spanAbove = false;
+      let spanBelow = false;
+      while (lx < w && !visited[cy * w + lx] && matches(cy * w + lx)) {
+        const p = cy * w + lx;
+        visited[p] = 1;
+        count++;
+        if (lx === 0 || lx === w - 1 || cy === 0 || cy === h - 1) hitBoundary = true;
+        if (lx < minX) minX = lx;
+        if (lx > maxX) maxX = lx;
+        if (cy < minY) minY = cy;
+        if (cy > maxY) maxY = cy;
+
+        if (cy > 0) {
+          const up = (cy - 1) * w + lx;
+          const upMatch = !visited[up] && matches(up);
+          if (!spanAbove && upMatch) {
+            stack.push(lx, cy - 1);
+            spanAbove = true;
+          } else if (spanAbove && !upMatch) {
+            spanAbove = false;
+          }
+        }
+        if (cy < h - 1) {
+          const dn = (cy + 1) * w + lx;
+          const dnMatch = !visited[dn] && matches(dn);
+          if (!spanBelow && dnMatch) {
+            stack.push(lx, cy + 1);
+            spanBelow = true;
+          } else if (spanBelow && !dnMatch) {
+            spanBelow = false;
+          }
+        }
+        lx++;
+      }
+    }
+
+    if (count === 0) return;
+
+    if (hitBoundary) {
+      if ((tab.bgColor || '#ffffff').toLowerCase() === currentColor.toLowerCase()) return;
+      pushHistory(tab);
+      tab.bgColor = currentColor;
+      updateBgPopoverUI();
+      render();
+      scheduleSave();
+      showToast('Цвет фона обновлён (оси автоматически подстроены)');
+      return;
+    }
+
+    const pad = 1;
+    minX = Math.max(0, minX - pad);
+    minY = Math.max(0, minY - pad);
+    maxX = Math.min(w - 1, maxX + pad);
+    maxY = Math.min(h - 1, maxY + pad);
+    const bw = maxX - minX + 1;
+    const bh = maxY - minY + 1;
+
+    const fillCanvas = document.createElement('canvas');
+    fillCanvas.width = bw;
+    fillCanvas.height = bh;
+    const fctx = fillCanvas.getContext('2d');
+    const out = fctx.createImageData(bw, bh);
+    for (let y = 0; y < bh; y++) {
+      for (let x = 0; x < bw; x++) {
+        const p = (minY + y) * w + (minX + x);
+        if (visited[p]) {
+          const oi = (y * bw + x) * 4;
+          out.data[oi] = fillRgb.r;
+          out.data[oi + 1] = fillRgb.g;
+          out.data[oi + 2] = fillRgb.b;
+          out.data[oi + 3] = 255;
+        }
+      }
+    }
+    fctx.putImageData(out, 0, 0);
+
+    const tlWorld = screenToWorld(minX, minY);
+    const brWorld = screenToWorld(maxX + 1, maxY + 1);
+
+    pushHistory(tab);
+    tab.objects.push({
+      id: uid('fill'),
+      type: 'fill',
+      x: tlWorld.x,
+      y: tlWorld.y,
+      w: brWorld.x - tlWorld.x,
+      h: brWorld.y - tlWorld.y,
+      src: fillCanvas.toDataURL('image/png')
+    });
+    render();
+    scheduleSave();
+  }
+
+  // ===== INLINE TEXT EDITOR =====
+  const textEditor = document.getElementById('inline-text-editor');
+  let activeTextPos = null;
+
+  function openInlineEditor(screenX, screenY, worldX, worldY) {
+    activeTextPos = { x: worldX, y: worldY };
+    textEditor.value = '';
+    textEditor.style.left = clamp(screenX, 10, Math.max(10, canvasW - 180)) + 'px';
+    textEditor.style.top = clamp(screenY, 10, Math.max(10, canvasH - 80)) + 'px';
+    textEditor.style.color = currentColor;
+    textEditor.style.fontSize = Math.max(16, currentSize * 4 + 10) + 'px';
+    textEditor.classList.remove('hidden');
+    setTimeout(() => textEditor.focus(), 10);
+  }
+
+  function closeInlineEditor(commit = true) {
+    if (textEditor.classList.contains('hidden')) return;
+    const val = textEditor.value.trim();
+    textEditor.classList.add('hidden');
+    if (commit && val && activeTextPos) {
+      const tab = getActiveTab();
+      pushHistory(tab);
+      tab.objects.push({
+        id: uid('txt'),
+        type: 'text',
+        x: activeTextPos.x,
+        y: activeTextPos.y,
+        text: val,
+        color: currentColor,
+        fontSize: Math.max(16, currentSize * 4 + 10)
+      });
+      render();
+      scheduleSave();
+    }
+    activeTextPos = null;
+  }
+
+  textEditor.addEventListener('blur', () => closeInlineEditor(true));
+  textEditor.addEventListener('keydown', (e) => {
+    if (e.code === 'Escape' || e.key === 'Escape') {
+      e.preventDefault();
+      closeInlineEditor(false);
+    } else if ((e.code === 'Enter' || e.key === 'Enter') && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      closeInlineEditor(true);
+    }
+  });
+
+  // ===== POINTER INTERACTIONS =====
+  function getCanvasCoords(e) {
+    const rect = canvas.getBoundingClientRect();
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  }
+
+  function updateCursor() {
+    if (spacePressed || currentTool === 'pan') {
+      canvas.style.cursor = interactionMode === 'pan' ? 'grabbing' : 'grab';
+    } else if (currentTool === 'select') {
+      canvas.style.cursor = 'default';
+    } else if (currentTool === 'text') {
+      canvas.style.cursor = 'text';
+    } else {
+      canvas.style.cursor = 'crosshair';
+    }
+  }
+
+  canvas.addEventListener('pointerdown', (e) => {
+    closePopovers();
+    if (!textEditor.classList.contains('hidden')) {
+      closeInlineEditor(true);
+      return;
+    }
+
+    const pt = getCanvasCoords(e);
+    const world = screenToWorld(pt.x, pt.y);
+    const tab = getActiveTab();
+
+    isPointerDown = true;
+    activePointerId = e.pointerId;
+    canvas.setPointerCapture(e.pointerId);
+
+    if (e.button === 1 || spacePressed || currentTool === 'pan') {
+      interactionMode = 'pan';
+      dragStartScreen = pt;
+      dragCamStart = { x: tab.camera.x, y: tab.camera.y };
+      updateCursor();
+      return;
+    }
+
+    if (e.button !== 0) return;
+
+    if (currentTool === 'fill') {
+      performSmartFill(pt.x, pt.y);
+      isPointerDown = false;
+      return;
+    }
+
+    if (currentTool === 'text') {
+      openInlineEditor(pt.x, pt.y, world.x, world.y);
+      isPointerDown = false;
+      return;
+    }
+
+    if (currentTool === 'laser') {
+      interactionMode = 'laser';
+      laserTrail.push({ x: world.x, y: world.y, t: performance.now() });
+      startLaserLoop();
+      return;
+    }
+
+    if (currentTool === 'select') {
+      const hit = findTopObjectAt(world.x, world.y);
+      selectedId = hit ? hit.id : null;
+      updateAxisBarUI();
+      render();
+      if (hit) {
+        interactionMode = 'drag';
+        dragStartWorld = world;
+        dragObjSnapshot = deepClone(hit);
+        pushHistory(tab);
+      } else {
+        interactionMode = null;
+      }
+      return;
+    }
+
+    if (currentTool === 'eraser') {
+      interactionMode = 'erase';
+      const hit = findTopObjectAt(world.x, world.y);
+      if (hit) {
+        pushHistory(tab);
+        tab.objects = tab.objects.filter(o => o.id !== hit.id);
+        if (selectedId === hit.id) {
+          selectedId = null;
+          updateAxisBarUI();
+        }
+        render();
+        scheduleSave();
+      }
+      return;
+    }
+
+    if (currentTool === 'pen' || currentTool === 'marker') {
+      interactionMode = 'draw';
+      selectedId = null;
+      updateAxisBarUI();
+      draftObj = {
+        id: uid('str'),
+        type: 'stroke',
+        color: currentColor,
+        size: currentTool === 'marker' ? Math.max(12, currentSize * 3) : currentSize,
+        opacity: currentTool === 'marker' ? 0.35 : 1,
+        points: [{ x: world.x, y: world.y }]
+      };
+      render();
+      return;
+    }
+
+    if (currentTool === 'shape') {
+      interactionMode = 'shape';
+      selectedId = null;
+      updateAxisBarUI();
+      draftObj = {
+        id: uid('shp'),
+        type: 'shape',
+        shape: currentShape,
+        color: currentColor,
+        size: currentSize,
+        filled: currentShapeFill,
+        x1: world.x,
+        y1: world.y,
+        x2: world.x,
+        y2: world.y
+      };
+      render();
+    }
+  });
+
+  canvas.addEventListener('pointermove', (e) => {
+    if (!isPointerDown || e.pointerId !== activePointerId) return;
+    const pt = getCanvasCoords(e);
+    const world = screenToWorld(pt.x, pt.y);
+    const tab = getActiveTab();
+
+    if (interactionMode === 'pan') {
+      tab.camera.x = dragCamStart.x - (pt.x - dragStartScreen.x) / tab.camera.zoom;
+      tab.camera.y = dragCamStart.y - (pt.y - dragStartScreen.y) / tab.camera.zoom;
+      render();
+      return;
+    }
+
+    if (interactionMode === 'laser') {
+      laserTrail.push({ x: world.x, y: world.y, t: performance.now() });
+      startLaserLoop();
+      return;
+    }
+
+    if (interactionMode === 'draw' && draftObj) {
+      const last = draftObj.points[draftObj.points.length - 1];
+      if (Math.hypot(world.x - last.x, world.y - last.y) >= 1.5 / tab.camera.zoom) {
+        draftObj.points.push({ x: world.x, y: world.y });
+        render();
+      }
+      return;
+    }
+
+    if (interactionMode === 'shape' && draftObj) {
+      draftObj.x2 = world.x;
+      draftObj.y2 = world.y;
+      render();
+      return;
+    }
+
+    if (interactionMode === 'drag' && selectedId && dragObjSnapshot) {
+      const obj = tab.objects.find(o => o.id === selectedId);
+      if (obj) {
+        moveObject(obj, dragObjSnapshot, world.x - dragStartWorld.x, world.y - dragStartWorld.y);
+        render();
+      }
+      return;
+    }
+
+    if (interactionMode === 'erase') {
+      const hit = findTopObjectAt(world.x, world.y);
+      if (hit) {
+        tab.objects = tab.objects.filter(o => o.id !== hit.id);
+        if (selectedId === hit.id) {
+          selectedId = null;
+          updateAxisBarUI();
+        }
+        render();
+        scheduleSave();
+      }
+    }
+  });
+
+  function finishPointer(e) {
+    if (!isPointerDown || (e && e.pointerId !== activePointerId)) return;
+    const tab = getActiveTab();
+
+    if ((interactionMode === 'draw' || interactionMode === 'shape') && draftObj) {
+      pushHistory(tab);
+      tab.objects.push(draftObj);
+      draftObj = null;
+      render();
+      scheduleSave();
+    } else if (interactionMode === 'drag') {
+      scheduleSave();
+    } else if (interactionMode === 'pan') {
+      scheduleSave(false);
+    }
+
+    isPointerDown = false;
+    activePointerId = null;
+    interactionMode = null;
+    dragObjSnapshot = null;
+    updateCursor();
+  }
+
+  canvas.addEventListener('pointerup', finishPointer);
+  canvas.addEventListener('pointercancel', finishPointer);
+
+  canvas.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const pt = getCanvasCoords(e);
+    const tab = getActiveTab();
+    const factor = e.deltaY < 0 ? 1.12 : 1 / 1.12;
+    setZoom(tab.camera.zoom * factor, pt.x, pt.y);
+  }, { passive: false });
+
+  // ===== CTRL+V IMAGE PASTE =====
+  window.addEventListener('paste', (e) => {
+    const activeEl = document.activeElement;
+    if (activeEl && (['INPUT', 'TEXTAREA'].includes(activeEl.tagName) || activeEl.isContentEditable)) return;
+    const items = e.clipboardData && e.clipboardData.items;
+    if (!items) return;
+    for (const item of items) {
+      if (item.type && item.type.startsWith('image/')) {
+        e.preventDefault();
+        const file = item.getAsFile();
+        if (!file) continue;
+        const reader = new FileReader();
+        reader.onload = () => {
+          const img = new Image();
+          img.onload = () => {
+            const tab = getActiveTab();
+            const maxDim = 480;
+            let w = img.naturalWidth;
+            let h = img.naturalHeight;
+            if (w > maxDim || h > maxDim) {
+              const ratio = Math.min(maxDim / w, maxDim / h);
+              w = Math.round(w * ratio);
+              h = Math.round(h * ratio);
+            }
+            pushHistory(tab);
+            const newObj = {
+              id: uid('img'),
+              type: 'image',
+              x: tab.camera.x - w / 2,
+              y: tab.camera.y - h / 2,
+              w,
+              h,
+              src: reader.result
+            };
+            tab.objects.push(newObj);
+            selectedId = newObj.id;
+            setTool('select');
+            render();
+            scheduleSave();
+            showToast('Изображение вставлено на доску');
+          };
+          img.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+        break;
+      }
+    }
+  });
+
+  // ===== TABS UI =====
+  const tabsListEl = document.getElementById('tabs-list');
+
+  function renderTabs() {
+    tabsListEl.innerHTML = '';
+    for (const tab of state.tabs) {
+      const el = document.createElement('div');
+      el.className = 'student-tab' + (tab.id === state.activeTabId ? ' active' : '');
+      el.dataset.tabId = tab.id;
+
+      const titleSpan = document.createElement('span');
+      titleSpan.className = 'tab-title';
+      titleSpan.textContent = tab.name;
+      el.appendChild(titleSpan);
+
+      const editBtn = document.createElement('button');
+      editBtn.type = 'button';
+      editBtn.className = 'tab-icon-btn';
+      editBtn.textContent = '✏️';
+      editBtn.title = 'Переименовать вкладку';
+      editBtn.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        startTabRename(tab, titleSpan);
+      });
+      el.appendChild(editBtn);
+
+      if (state.tabs.length > 1) {
+        const delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        const isArmed = pendingDeleteTabId === tab.id;
+        delBtn.className = 'tab-icon-btn' + (isArmed ? ' confirm-del' : '');
+        delBtn.textContent = isArmed ? 'Удалить?' : '✕';
+        delBtn.title = isArmed ? 'Нажмите ещё раз для удаления' : 'Удалить вкладку';
+        delBtn.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          if (pendingDeleteTabId === tab.id) {
+            clearTimeout(pendingDeleteTimer);
+            pendingDeleteTabId = null;
+            state.tabs = state.tabs.filter(t => t.id !== tab.id);
+            if (state.activeTabId === tab.id) {
+              state.activeTabId = state.tabs[0].id;
+            }
+            selectedId = null;
+            switchTab(state.activeTabId);
+            scheduleSave();
+            showToast('Вкладка удалена');
+          } else {
+            pendingDeleteTabId = tab.id;
+            renderTabs();
+            clearTimeout(pendingDeleteTimer);
+            pendingDeleteTimer = setTimeout(() => {
+              pendingDeleteTabId = null;
+              renderTabs();
+            }, 3000);
+          }
+        });
+        el.appendChild(delBtn);
+      }
+
+      el.addEventListener('click', () => {
+        if (tab.id !== state.activeTabId) switchTab(tab.id);
+      });
+
+      tabsListEl.appendChild(el);
+    }
+  }
+
+  function startTabRename(tab, titleSpan) {
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'tab-rename-input';
+    input.value = tab.name;
+    titleSpan.replaceWith(input);
+    input.focus();
+    input.select();
+
+    let done = false;
+    const commit = () => {
+      if (done) return;
+      done = true;
+      const newName = input.value.trim();
+      if (newName) tab.name = newName;
+      renderTabs();
+      scheduleSave();
+    };
+    input.addEventListener('blur', commit);
+    input.addEventListener('keydown', (e) => {
+      if (e.code === 'Enter' || e.key === 'Enter') {
+        e.preventDefault();
+        commit();
+      } else if (e.code === 'Escape' || e.key === 'Escape') {
+        e.preventDefault();
+        done = true;
+        renderTabs();
+      }
+    });
+  }
+
+  function switchTab(tabId) {
+    closeInlineEditor(true);
+    state.activeTabId = tabId;
+    selectedId = null;
+    renderTabs();
+    updateZoomLabel();
+    updateBgPopoverUI();
+    updateAxisBarUI();
+    render();
+  }
+
+  document.getElementById('add-tab-btn').addEventListener('click', (e) => {
+    e.currentTarget.blur();
+    const newTab = createTab(`Ученик ${state.tabs.length + 1}`);
+    state.tabs.push(newTab);
+    switchTab(newTab.id);
+    scheduleSave();
+  });
+
+  // ===== TOOLBAR & POPOVERS =====
+  const shapesPopover = document.getElementById('shapes-popover');
+  const bgPopover = document.getElementById('bg-popover');
+  const shapesToolBtn = document.getElementById('shapes-tool-btn');
+  const bgOpenBtn = document.getElementById('bg-open-btn');
+
+  function closePopovers() {
+    shapesPopover.classList.add('hidden');
+    bgPopover.classList.add('hidden');
+  }
+
+  function setTool(tool) {
+    currentTool = tool;
+    document.querySelectorAll('#toolbar .tool-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tool === tool);
+    });
+    if (tool !== 'select') {
+      selectedId = null;
+      updateAxisBarUI();
+      render();
+    }
+    updateCursor();
+  }
+
+  document.querySelectorAll('#toolbar .tool-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      btn.blur();
+      const tool = btn.dataset.tool;
+      if (tool === 'shape') {
+        const wasHidden = shapesPopover.classList.contains('hidden');
+        closePopovers();
+        setTool('shape');
+        if (wasHidden) {
+          const rect = shapesToolBtn.getBoundingClientRect();
+          shapesPopover.style.left = Math.min(rect.right + 10, window.innerWidth - 240) + 'px';
+          shapesPopover.style.top = clamp(rect.top - 20, 12, window.innerHeight - 220) + 'px';
+          shapesPopover.classList.remove('hidden');
+        }
+      } else {
+        closePopovers();
+        setTool(tool);
+      }
+    });
+  });
+
+  document.querySelectorAll('#shapes-popover .shape-opt').forEach(btn => {
+    btn.addEventListener('click', () => {
+      btn.blur();
+      currentShape = btn.dataset.shape;
+      document.querySelectorAll('#shapes-popover .shape-opt').forEach(b => {
+        b.classList.toggle('active', b === btn);
+      });
+      setTool('shape');
+      shapesPopover.classList.add('hidden');
+    });
+  });
+
+  document.getElementById('shape-fill-chk').addEventListener('change', (e) => {
+    currentShapeFill = e.target.checked;
+  });
+
+  // ===== COLORS, STROKE SIZE, UNDO/REDO, CLEAR =====
+  const customColorInput = document.getElementById('custom-color-input');
+
+  function setColor(hex) {
+    currentColor = hex;
+    customColorInput.value = hex;
+    document.querySelectorAll('#color-swatches-group .color-swatch').forEach(sw => {
+      sw.classList.toggle('active', sw.dataset.color.toLowerCase() === hex.toLowerCase());
+    });
+  }
+
+  document.querySelectorAll('#color-swatches-group .color-swatch').forEach(sw => {
+    sw.addEventListener('click', () => {
+      sw.blur();
+      setColor(sw.dataset.color);
+    });
+  });
+
+  customColorInput.addEventListener('input', (e) => {
+    setColor(e.target.value);
+  });
+
+  const strokeSlider = document.getElementById('stroke-size-slider');
+  const strokeSizeLabel = document.getElementById('stroke-size-label');
+  strokeSlider.addEventListener('input', (e) => {
+    currentSize = Number(e.target.value) || 3;
+    strokeSizeLabel.textContent = currentSize + 'px';
+  });
+
+  document.getElementById('undo-btn').addEventListener('click', (e) => {
+    e.currentTarget.blur();
+    undo();
+  });
+  document.getElementById('redo-btn').addEventListener('click', (e) => {
+    e.currentTarget.blur();
+    redo();
+  });
+
+  const clearBoardBtn = document.getElementById('clear-board-btn');
+  clearBoardBtn.addEventListener('click', () => {
+    clearBoardBtn.blur();
+    if (!clearConfirmArmed) {
+      clearConfirmArmed = true;
+      clearBoardBtn.textContent = 'Точно очистить?';
+      clearTimeout(clearConfirmTimer);
+      clearConfirmTimer = setTimeout(() => {
+        clearConfirmArmed = false;
+        clearBoardBtn.textContent = '🗑️ Очистить';
+      }, 3000);
+      return;
+    }
+    clearTimeout(clearConfirmTimer);
+    clearConfirmArmed = false;
+    clearBoardBtn.textContent = '🗑️ Очистить';
+    const tab = getActiveTab();
+    pushHistory(tab);
+    tab.objects = [];
+    selectedId = null;
+    updateAxisBarUI();
+    render();
+    scheduleSave();
+    showToast('Доска очищена');
+  });
+
+  // ===== COORDINATE AXES CONTROLS =====
+  const axisPropsBar = document.getElementById('axis-props-bar');
+  const axisRangeVal = document.getElementById('axis-range-val');
+  const axisStepVal = document.getElementById('axis-step-val');
+  const axisColorSelect = document.getElementById('axis-color-select');
+
+  function getSelectedAxis() {
+    if (!selectedId) return null;
+    const tab = getActiveTab();
+    const obj = tab.objects.find(o => o.id === selectedId);
+    return obj && obj.type === 'axis' ? obj : null;
+  }
+
+  function updateAxisBarUI() {
+    const axis = getSelectedAxis();
+    if (!axis) {
+      axisPropsBar.classList.add('hidden');
+      return;
+    }
+    axisPropsBar.classList.remove('hidden');
+    axisRangeVal.textContent = '±' + (axis.range || 8);
+    axisStepVal.textContent = (axis.step || 32) + 'px';
+    axisColorSelect.value = axis.color || 'auto';
+  }
+
+  document.getElementById('add-axis-btn').addEventListener('click', (e) => {
+    e.currentTarget.blur();
+    closePopovers();
+    const tab = getActiveTab();
+    const existingAxes = tab.objects.filter(o => o.type === 'axis').length;
+    const offset = (existingAxes % 5) * 32;
+    pushHistory(tab);
+    const axisObj = {
+      id: uid('axis'),
+      type: 'axis',
+      x: tab.camera.x + offset,
+      y: tab.camera.y + offset,
+      range: 8,
+      step: 32,
+      color: 'auto'
+    };
+    tab.objects.push(axisObj);
+    selectedId = axisObj.id;
+    setTool('select');
+    updateAxisBarUI();
+    render();
+    scheduleSave();
+    showToast('Ось координат добавлена — перетаскивайте инструментом «Выбор» (V)');
+  });
+
+  document.getElementById('axis-range-dec').addEventListener('click', (e) => {
+    e.currentTarget.blur();
+    const axis = getSelectedAxis();
+    if (!axis) return;
+    pushHistory(getActiveTab());
+    axis.range = clamp((axis.range || 8) - 1, 2, 50);
+    updateAxisBarUI();
+    render();
+    scheduleSave();
+  });
+
+  document.getElementById('axis-range-inc').addEventListener('click', (e) => {
+    e.currentTarget.blur();
+    const axis = getSelectedAxis();
+    if (!axis) return;
+    pushHistory(getActiveTab());
+    axis.range = clamp((axis.range || 8) + 1, 2, 50);
+    updateAxisBarUI();
+    render();
+    scheduleSave();
+  });
+
+  document.getElementById('axis-step-dec').addEventListener('click', (e) => {
+    e.currentTarget.blur();
+    const axis = getSelectedAxis();
+    if (!axis) return;
+    pushHistory(getActiveTab());
+    axis.step = clamp((axis.step || 32) - 4, 20, 80);
+    updateAxisBarUI();
+    render();
+    scheduleSave();
+  });
+
+  document.getElementById('axis-step-inc').addEventListener('click', (e) => {
+    e.currentTarget.blur();
+    const axis = getSelectedAxis();
+    if (!axis) return;
+    pushHistory(getActiveTab());
+    axis.step = clamp((axis.step || 32) + 4, 20, 80);
+    updateAxisBarUI();
+    render();
+    scheduleSave();
+  });
+
+  axisColorSelect.addEventListener('change', () => {
+    const axis = getSelectedAxis();
+    if (!axis) return;
+    pushHistory(getActiveTab());
+    axis.color = axisColorSelect.value;
+    axisColorSelect.blur();
+    render();
+    scheduleSave();
+  });
+
+  document.getElementById('axis-delete-btn').addEventListener('click', (e) => {
+    e.currentTarget.blur();
+    const axis = getSelectedAxis();
+    if (!axis) return;
+    const tab = getActiveTab();
+    pushHistory(tab);
+    tab.objects = tab.objects.filter(o => o.id !== axis.id);
+    selectedId = null;
+    updateAxisBarUI();
+    render();
+    scheduleSave();
+    showToast('Ось координат удалена');
+  });
+
+  // ===== BACKGROUND POPOVER =====
+  const bgCustomColor = document.getElementById('bg-custom-color');
+
+  function updateBgPopoverUI() {
+    const tab = getActiveTab();
+    const curBg = (tab.bgColor || '#ffffff').toLowerCase();
+    bgCustomColor.value = curBg;
+    document.querySelectorAll('#bg-popover .bg-swatch').forEach(sw => {
+      sw.classList.toggle('active', sw.dataset.bg.toLowerCase() === curBg);
+    });
+    const curPat = tab.bgPattern || 'grid';
+    document.querySelectorAll('#bg-popover [data-pattern]').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.pattern === curPat);
+    });
+  }
+
+  bgOpenBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    bgOpenBtn.blur();
+    const wasHidden = bgPopover.classList.contains('hidden');
+    closePopovers();
+    if (wasHidden) {
+      updateBgPopoverUI();
+      const rect = bgOpenBtn.getBoundingClientRect();
+      bgPopover.style.left = clamp(rect.left, 12, window.innerWidth - 250) + 'px';
+      bgPopover.style.top = (rect.bottom + 8) + 'px';
+      bgPopover.classList.remove('hidden');
+    }
+  });
+
+  document.querySelectorAll('#bg-popover .bg-swatch').forEach(sw => {
+    sw.addEventListener('click', () => {
+      sw.blur();
+      const tab = getActiveTab();
+      pushHistory(tab);
+      tab.bgColor = sw.dataset.bg;
+      updateBgPopoverUI();
+      render();
+      scheduleSave();
+    });
+  });
+
+  bgCustomColor.addEventListener('input', (e) => {
+    const tab = getActiveTab();
+    tab.bgColor = e.target.value;
+    updateBgPopoverUI();
+    render();
+    scheduleSave();
+  });
+
+  document.querySelectorAll('#bg-popover [data-pattern]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      btn.blur();
+      const tab = getActiveTab();
+      pushHistory(tab);
+      tab.bgPattern = btn.dataset.pattern;
+      updateBgPopoverUI();
+      render();
+      scheduleSave();
+    });
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!shapesPopover.contains(e.target) && !shapesToolBtn.contains(e.target)) {
+      shapesPopover.classList.add('hidden');
+    }
+    if (!bgPopover.contains(e.target) && !bgOpenBtn.contains(e.target)) {
+      bgPopover.classList.add('hidden');
+    }
+  });
+
+  // ===== ZOOM BUTTONS =====
+  document.getElementById('zoom-in-btn').addEventListener('click', (e) => {
+    e.currentTarget.blur();
+    setZoom(getActiveTab().camera.zoom * 1.2);
+  });
+
+  document.getElementById('zoom-out-btn').addEventListener('click', (e) => {
+    e.currentTarget.blur();
+    setZoom(getActiveTab().camera.zoom / 1.2);
+  });
+
+  document.getElementById('zoom-reset-btn').addEventListener('click', (e) => {
+    e.currentTarget.blur();
+    const tab = getActiveTab();
+    tab.camera = { x: 0, y: 0, zoom: 1 };
+    updateZoomLabel();
+    render();
+    scheduleSave(false);
+  });
+
+  // ===== EXPORT & IMPORT JSON =====
+  document.getElementById('export-json-btn').addEventListener('click', (e) => {
+    e.currentTarget.blur();
+    try {
+      const payload = JSON.stringify(serializeState(), null, 2);
+      const blob = new Blob([payload], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `eduboard-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      showToast('Резервная копия JSON скачана');
+    } catch (err) {
+      showToast('Не удалось экспортировать JSON');
+    }
+  });
+
+  const importFileInput = document.getElementById('import-file-input');
+  document.getElementById('import-json-btn').addEventListener('click', (e) => {
+    e.currentTarget.blur();
+    importFileInput.value = '';
+    importFileInput.click();
+  });
+
+  importFileInput.addEventListener('change', (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const parsed = JSON.parse(String(reader.result || ''));
+        if (hydrateState(parsed)) {
+          switchTab(state.activeTabId);
+          scheduleSave();
+          showToast('Доски успешно загружены из JSON');
+        } else {
+          showToast('Неверный формат файла JSON');
+        }
+      } catch (err) {
+        showToast('Ошибка чтения файла JSON');
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  // ===== CLOUD ACCOUNT SYNC =====
+  const cloudModal = document.getElementById('cloud-modal');
+  const cloudStatus = document.getElementById('cloud-status');
+  const cloudLoginInput = document.getElementById('cloud-login-input');
+  const cloudPassInput = document.getElementById('cloud-pass-input');
+  const cloudBtnLabel = document.getElementById('cloud-btn-label');
+  const cloudQuickSyncBtn = document.getElementById('cloud-quick-sync-btn');
+  const cloudLogoutBtn = document.getElementById('cloud-logout-btn');
+
+  function setCloudStatus(text, type = '') {
+    cloudStatus.textContent = text;
+    cloudStatus.className = 'status-box' + (type ? ' ' + type : '');
+  }
+
+  function updateCloudUI() {
+    if (cloudSession && cloudSession.login) {
+      cloudBtnLabel.textContent = cloudSession.login;
+      cloudLoginInput.value = cloudSession.login;
+      cloudQuickSyncBtn.classList.remove('hidden');
+      cloudLogoutBtn.classList.remove('hidden');
+    } else {
+      cloudBtnLabel.textContent = 'Аккаунт';
+      cloudQuickSyncBtn.classList.add('hidden');
+      cloudLogoutBtn.classList.add('hidden');
+    }
+  }
+
+  function loadCloudSession() {
+    try {
+      const raw = localStorage.getItem(CLOUD_SESSION_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && parsed.login && parsed.passHash) {
+          cloudSession = parsed;
+        }
+      }
+    } catch (e) {}
+    updateCloudUI();
+  }
+
+  function closeCloudModal() {
+    cloudModal.classList.add('hidden');
+    try { localStorage.setItem(ONBOARD_KEY, '1'); } catch (e) {}
+  }
+
+  async function cloudSync(action, silent = false) {
+    let login = cloudLoginInput.value.trim();
+    let pass = cloudPassInput.value;
+    let passHash = '';
+
+    if (cloudSession && (!login || login === cloudSession.login) && !pass) {
+      login = cloudSession.login;
+      passHash = cloudSession.passHash;
+    } else {
+      if (!login || !pass) {
+        if (!silent) setCloudStatus('Введите логин и пароль.', 'warn');
+        return;
+      }
+      passHash = await sha256Hex(login + ':' + pass);
+    }
+
+    if (!silent) setCloudStatus(action === 'load' ? 'Загрузка данных из облака...' : 'Сохранение в облако...');
+
+    try {
+      const res = await fetch('/api/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action,
+          login,
+          passHash,
+          data: action === 'save' ? serializeState() : undefined
+        })
+      });
+
+      if (res.status === 404 || res.status === 405) {
+        if (!silent) {
+          setCloudStatus(
+            'Серверная функция /api/sync (Cloudflare Pages Functions + KV) ещё не подключена. Ваши доски по-прежнему надёжно сохраняются локально в браузере.',
+            'warn'
+          );
+        }
+        return;
+      }
+
+      const json = await res.json();
+      if (!res.ok || !json.ok) {
+        if (!silent) setCloudStatus(json.error || 'Ошибка синхронизации с облаком.', 'err');
+        return;
+      }
+
+      cloudSession = { login, passHash };
+      try { localStorage.setItem(CLOUD_SESSION_KEY, JSON.stringify(cloudSession)); } catch (e) {}
+      cloudPassInput.value = '';
+      updateCloudUI();
+
+      if (action === 'load') {
+        if (json.data && hydrateState(json.data)) {
+          switchTab(state.activeTabId);
+          try { localStorage.setItem(STORAGE_KEY, JSON.stringify(serializeState())); } catch (e) {}
+          if (!silent) {
+            setCloudStatus(`Вход выполнен (${login}). Доски загружены из облака!`, 'ok');
+            showToast('Доски загружены из облака');
+          }
+        } else {
+          if (!silent) setCloudStatus(`Аккаунт ${login} активен. Нажмите «Сохранить в облако», чтобы записать текущие доски.`, 'ok');
+        }
+      } else {
+        if (!silent) {
+          setCloudStatus(`Все доски сохранены в облако (${login}).`, 'ok');
+          showToast('Сохранено в облако');
+        }
+      }
+    } catch (err) {
+      if (!silent) {
+        setCloudStatus(
+          'Облачный сервер (/api/sync) сейчас недоступен или ещё не настроен. Локальное сохранение в браузере работает в обычном режиме.',
+          'warn'
+        );
+      }
+    }
+  }
+
+  document.getElementById('cloud-open-btn').addEventListener('click', (e) => {
+    e.currentTarget.blur();
+    closePopovers();
+    cloudModal.classList.remove('hidden');
+  });
+
+  document.getElementById('cloud-close-btn').addEventListener('click', closeCloudModal);
+  document.getElementById('cloud-skip-btn').addEventListener('click', closeCloudModal);
+  cloudModal.addEventListener('click', (e) => {
+    if (e.target === cloudModal) closeCloudModal();
+  });
+
+  document.getElementById('cloud-load-btn').addEventListener('click', () => cloudSync('load', false));
+  document.getElementById('cloud-save-btn').addEventListener('click', () => cloudSync('save', false));
+  cloudQuickSyncBtn.addEventListener('click', (e) => {
+    e.currentTarget.blur();
+    cloudSync('save', false);
+  });
+
+  cloudLogoutBtn.addEventListener('click', () => {
+    cloudSession = null;
+    try { localStorage.removeItem(CLOUD_SESSION_KEY); } catch (e) {}
+    cloudLoginInput.value = '';
+    cloudPassInput.value = '';
+    updateCloudUI();
+    setCloudStatus('Вы вышли из облачного аккаунта. Локальные доски остались в браузере.');
+    showToast('Вы вышли из аккаунта');
+  });
+
+  // ===== INTERACTIVE SPOTLIGHT TUTORIAL & FIRST-VISIT ONBOARDING =====
+  const welcomeModal = document.getElementById('welcome-modal');
+  const tourOverlay = document.getElementById('tour-overlay');
+  const tourSpotlight = document.getElementById('tour-spotlight');
+  const tourCard = document.getElementById('tour-card');
+  const tourStepBadge = document.getElementById('tour-step-badge');
+  const tourTitle = document.getElementById('tour-title');
+  const tourText = document.getElementById('tour-text');
+  const tourDots = document.getElementById('tour-dots');
+  const tourPrevBtn = document.getElementById('tour-prev-btn');
+  const tourNextBtn = document.getElementById('tour-next-btn');
+
+  const TOUR_STEPS = [
+    {
+      targets: ['#tabs-list', '#add-tab-btn'],
+      title: '1. Вкладки учеников',
+      text: 'Создавайте отдельные доски кнопкой «+ Ученик» и свободно переключайтесь между ними. Нажмите ✏️ на вкладке для переименования, а ✕ защищён повторным подтверждением от случайного удаления.'
+    },
+    {
+      targets: ['#toolbar'],
+      title: '2. Основные инструменты рисования',
+      text: 'На левой панели собраны Выбор (V), Рука (H или Пробел), Перо (P), Маркер (M), Ластик (E) и Текст (T). Горячие клавиши работают и на русской, и на английской раскладке. Скриншоты вставляются через Ctrl+V.'
+    },
+    {
+      targets: ['#shapes-tool-btn', '[data-tool="fill"]'],
+      title: '3. Фигуры и умная заливка',
+      text: 'Кнопка «Фигуры» (S) открывает Линию, Стрелку, Прямоугольник, Круг и Треугольник с опцией заливки внутри. «Ведро» (G) аккуратно закрашивает замкнутые области под осями или меняет цвет всего фона.'
+    },
+    {
+      targets: ['#add-axis-btn'],
+      title: '4. Оси координат X/Y',
+      text: 'Добавляйте сколько угодно координатных осей на одно поле. Выделите любую ось инструментом «Выбор» (V), чтобы перетаскивать её, менять диапазон чисел (±8 — от 2 до 50), шаг деления и цвет.'
+    },
+    {
+      targets: ['#bg-open-btn'],
+      title: '5. Фон и бесконечный холст',
+      text: 'Настраивайте цвет и разметку фона (клетка, точки, линейка, тёмная или чёрная доска — оси сами станут контрастными). Перемещайте холст Пробелом, масштабируйте колёсиком и сбрасывайте зум кнопкой «100%» справа внизу.'
+    },
+    {
+      targets: ['#export-json-btn', '#import-json-btn'],
+      title: '6. Сохранение и резервные копии',
+      text: 'Весь прогресс сохраняется в браузере автоматически. Кнопки «Экспорт» и «Импорт» позволяют скачать все доски в один файл .json для бэкапа или переноса на другой компьютер.'
+    },
+    {
+      targets: ['#cloud-open-btn'],
+      title: '7. Облачный аккаунт',
+      text: 'Войдите по логину и паролю, чтобы синхронизировать доски между разными устройствами. Сессия запоминается в браузере — вводить данные при каждом заходе не придётся.'
+    }
+  ];
+
+  let tourIndex = 0;
+  let onboardingFlowActive = false;
+
+  function getUnionRect(selectors) {
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const sel of selectors) {
+      const el = document.querySelector(sel);
+      if (!el) continue;
+      const r = el.getBoundingClientRect();
+      if (r.width === 0 && r.height === 0) continue;
+      minX = Math.min(minX, r.left);
+      minY = Math.min(minY, r.top);
+      maxX = Math.max(maxX, r.right);
+      maxY = Math.max(maxY, r.bottom);
+    }
+    if (!Number.isFinite(minX)) {
+      return { left: window.innerWidth / 2 - 60, top: window.innerHeight / 2 - 30, width: 120, height: 60 };
+    }
+    return { left: minX, top: minY, width: maxX - minX, height: maxY - minY };
+  }
+
+  function positionTourStep() {
+    if (tourOverlay.classList.contains('hidden')) return;
+    const step = TOUR_STEPS[tourIndex];
+    if (!step) return;
+    const rect = getUnionRect(step.targets);
+    const pad = 8;
+    const spLeft = Math.max(4, rect.left - pad);
+    const spTop = Math.max(4, rect.top - pad);
+    const spW = Math.min(window.innerWidth - spLeft - 4, rect.width + pad * 2);
+    const spH = Math.min(window.innerHeight - spTop - 4, rect.height + pad * 2);
+
+    tourSpotlight.style.left = spLeft + 'px';
+    tourSpotlight.style.top = spTop + 'px';
+    tourSpotlight.style.width = spW + 'px';
+    tourSpotlight.style.height = spH + 'px';
+
+    const cardRect = tourCard.getBoundingClientRect();
+    const cw = cardRect.width || 340;
+    const ch = cardRect.height || 180;
+
+    let cardLeft = spLeft;
+    let cardTop = spTop + spH + 14;
+
+    if (spLeft < 100 && spH > 180) {
+      cardLeft = spLeft + spW + 16;
+      cardTop = clamp(spTop + spH / 2 - ch / 2, 16, window.innerHeight - ch - 16);
+    } else {
+      if (cardTop + ch > window.innerHeight - 16) {
+        cardTop = Math.max(16, spTop - ch - 14);
+      }
+      cardLeft = clamp(cardLeft, 12, window.innerWidth - cw - 12);
+    }
+
+    tourCard.style.left = cardLeft + 'px';
+    tourCard.style.top = cardTop + 'px';
+  }
+
+  function renderTourStep() {
+    const step = TOUR_STEPS[tourIndex];
+    tourStepBadge.textContent = `Шаг ${tourIndex + 1} из ${TOUR_STEPS.length}`;
+    tourTitle.textContent = step.title;
+    tourText.textContent = step.text;
+    tourPrevBtn.disabled = tourIndex === 0;
+    tourNextBtn.textContent = tourIndex === TOUR_STEPS.length - 1 ? 'Завершить' : 'Далее';
+
+    tourDots.innerHTML = '';
+    for (let i = 0; i < TOUR_STEPS.length; i++) {
+      const dot = document.createElement('span');
+      dot.className = 'tour-dot' + (i === tourIndex ? ' active' : '');
+      tourDots.appendChild(dot);
+    }
+    requestAnimationFrame(positionTourStep);
+  }
+
+  function openWelcomeModal(isFirstVisit = false) {
+    onboardingFlowActive = isFirstVisit;
+    closePopovers();
+    welcomeModal.classList.remove('hidden');
+  }
+
+  function finishOnboardingPrompt() {
+    onboardingFlowActive = false;
+    try { localStorage.setItem(ONBOARD_KEY, '1'); } catch (e) {}
+    if (!cloudSession || !cloudSession.login) {
+      cloudModal.classList.remove('hidden');
+    }
+  }
+
+  function startTour(fromOnboarding = false) {
+    closePopovers();
+    welcomeModal.classList.add('hidden');
+    onboardingFlowActive = fromOnboarding;
+    tourIndex = 0;
+    tourOverlay.classList.remove('hidden');
+    renderTourStep();
+  }
+
+  function endTour() {
+    tourOverlay.classList.add('hidden');
+    if (onboardingFlowActive) {
+      finishOnboardingPrompt();
+    }
+  }
+
+  document.getElementById('tour-open-btn').addEventListener('click', (e) => {
+    e.currentTarget.blur();
+    startTour(false);
+  });
+
+  document.getElementById('welcome-start-tour-btn').addEventListener('click', () => {
+    startTour(true);
+  });
+
+  document.getElementById('welcome-skip-tour-btn').addEventListener('click', () => {
+    welcomeModal.classList.add('hidden');
+    if (onboardingFlowActive) finishOnboardingPrompt();
+  });
+
+  document.getElementById('tour-skip-btn').addEventListener('click', () => endTour());
+
+  tourPrevBtn.addEventListener('click', () => {
+    if (tourIndex > 0) {
+      tourIndex--;
+      renderTourStep();
+    }
+  });
+
+  tourNextBtn.addEventListener('click', () => {
+    if (tourIndex < TOUR_STEPS.length - 1) {
+      tourIndex++;
+      renderTourStep();
+    } else {
+      endTour();
+    }
+  });
+
+  // ===== KEYBOARD SHORTCUTS (RU & EN LAYOUT INDEPENDENT) =====
+  window.addEventListener('keydown', (e) => {
+    const code = e.code;
+
+    if (!welcomeModal.classList.contains('hidden')) {
+      if (code === 'Escape' || e.key === 'Escape') {
+        e.preventDefault();
+        welcomeModal.classList.add('hidden');
+        if (onboardingFlowActive) finishOnboardingPrompt();
+      }
+      return;
+    }
+
+    if (!cloudModal.classList.contains('hidden')) {
+      if (code === 'Escape' || e.key === 'Escape') {
+        e.preventDefault();
+        closeCloudModal();
+      }
+      return;
+    }
+
+    if (!tourOverlay.classList.contains('hidden')) {
+      if (code === 'Escape' || e.key === 'Escape') {
+        e.preventDefault();
+        endTour();
+      } else if (code === 'ArrowRight' || e.key === 'ArrowRight') {
+        e.preventDefault();
+        tourNextBtn.click();
+      } else if (code === 'ArrowLeft' || e.key === 'ArrowLeft') {
+        e.preventDefault();
+        if (tourIndex > 0) tourPrevBtn.click();
+      }
+      return;
+    }
+
+    const activeEl = document.activeElement;
+    const isEditable = activeEl && (
+      ['INPUT', 'TEXTAREA', 'SELECT'].includes(activeEl.tagName) ||
+      activeEl.isContentEditable
+    );
+    if (isEditable) return;
+
+    if (code === 'Escape' || e.key === 'Escape') {
+      e.preventDefault();
+      closePopovers();
+      if (selectedId) {
+        selectedId = null;
+        updateAxisBarUI();
+        render();
+      }
+      return;
+    }
+
+    if (code === 'Space') {
+      e.preventDefault();
+      if (!spacePressed) {
+        spacePressed = true;
+        updateCursor();
+      }
+      return;
+    }
+
+    if ((e.ctrlKey || e.metaKey) && code === 'KeyZ') {
+      e.preventDefault();
+      if (e.shiftKey) redo();
+      else undo();
+      return;
+    }
+
+    if ((e.ctrlKey || e.metaKey) && code === 'KeyY') {
+      e.preventDefault();
+      redo();
+      return;
+    }
+
+    if ((code === 'Delete' || code === 'Backspace') && selectedId) {
+      e.preventDefault();
+      const tab = getActiveTab();
+      pushHistory(tab);
+      tab.objects = tab.objects.filter(o => o.id !== selectedId);
+      selectedId = null;
+      updateAxisBarUI();
+      render();
+      scheduleSave();
+      return;
+    }
+
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+    if (code === 'KeyV') { closePopovers(); setTool('select'); }
+    else if (code === 'KeyH') { closePopovers(); setTool('pan'); }
+    else if (code === 'KeyP') { closePopovers(); setTool('pen'); }
+    else if (code === 'KeyM') { closePopovers(); setTool('marker'); }
+    else if (code === 'KeyE') { closePopovers(); setTool('eraser'); }
+    else if (code === 'KeyT') { closePopovers(); setTool('text'); }
+    else if (code === 'KeyS') { closePopovers(); setTool('shape'); }
+    else if (code === 'KeyG') { closePopovers(); setTool('fill'); }
+    else if (code === 'KeyL') { closePopovers(); setTool('laser'); }
+  });
+
+  window.addEventListener('keyup', (e) => {
+    if (e.code === 'Space') {
+      spacePressed = false;
+      updateCursor();
+    }
+  });
+
+  // ===== INITIALIZE =====
+  window.addEventListener('resize', () => {
+    resizeCanvas();
+    positionTourStep();
+  });
+
+  loadLocal();
+  loadCloudSession();
+  resizeCanvas();
+  switchTab(state.activeTabId);
+
+  try {
+    if (!localStorage.getItem(ONBOARD_KEY)) {
+      setTimeout(() => openWelcomeModal(true), 350);
+    }
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>
